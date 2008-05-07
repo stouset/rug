@@ -9,9 +9,10 @@ class Git::Store::Sha1File
   PERMS         = 0444
   SUBDIR_LENGTH = 2
   
-  INPUT_FORMAT  = /(\w+) (\d+)\0(.*)/
+  INPUT_FORMAT  = /(\w+) (\d+)\0(.*)/m
   OUTPUT_FORMAT = "%s %d\0%s"
   
+  VALID_OBJECTS = %w{ blob commit tree tag }
   
   attr_accessor :object
   
@@ -33,16 +34,17 @@ class Git::Store::Sha1File
   def self.find(hash)
     contents = read(hash)
     
-    verify_hash(contents, hash)
+    verify_hash(hash, contents)
     
-    match  = contents.match(FILE_FORMAT)
-    type   = match[1].capitalize
+    match  = contents.match(INPUT_FORMAT)
+    type   = match[1]
     length = match[2].to_i
     data   = match[3]
     
-    verify_length(data, length)
+    verify_type(hash, type)
+    verify_length(hash, data, length)
     
-    self.new(nil)
+    self.new(Git::Object.load(type, data))
   rescue Errno::ENOENT
     nil
   end
@@ -120,13 +122,19 @@ class Git::Store::Sha1File
     File.exist?(self.filename(hash))
   end
   
-  def self.verify_hash(data, hash)
+  def self.verify_hash(hash, data)
     if self.hash(data) != hash
       raise Git::CorruptSha1File, "contents of #{hash} didn't match checksum"
     end
   end
   
-  def self.verify_length(data, length)
+  def self.verify_type(hash, type)
+    unless VALID_OBJECTS.include? type
+      raise Git::CorruptSha1File, "contents of #{hash} can't be a #{type}"
+    end
+  end
+  
+  def self.verify_length(hash, data, length)
     if data.length != length
       raise Git::CorruptSha1File, "contents of #{hash} had the wrong length"
     end

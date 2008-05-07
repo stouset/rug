@@ -8,5 +8,9 @@ class Git::Object::File
     mode = params[:mode] || '0644'
     
     (@blob = params[:blob]) || (@hash = params[:hash])
-    
+  end
+  
+  def blob
+    @blob || Git::Object
+  end
 end

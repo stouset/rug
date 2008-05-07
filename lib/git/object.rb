@@ -10,7 +10,8 @@ class Git::Object
   end
   
   def save
-    Git::Store::Sha1File.new(self).save
+    file = Git::Store::Sha1File.new(self).save
+    file.hash
   end
   
   def type

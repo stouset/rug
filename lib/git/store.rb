@@ -1,0 +1,2 @@
+module Git::Store
+end

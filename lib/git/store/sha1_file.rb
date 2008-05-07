@@ -107,7 +107,9 @@ class Git::Store::Sha1File
   end
   
   def self.filename(hash)
-    self.path(hash.dup.insert(SUBDIR_LENGTH, File::SEPARATOR))
+    subdir   = hash[0, SUBDIR_LENGTH]
+    filename = hash[SUBDIR_LENGTH .. -1]
+    self.path(subdir, filename)
   end
   
   def self.hash(data)

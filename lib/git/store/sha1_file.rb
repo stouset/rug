@@ -103,7 +103,7 @@ class Git::Store::Sha1File
   #
   def save
     unless saved?
-      self.class.write(hash, contents)
+      self.class.write(contents)
     end
     
     self
@@ -163,15 +163,14 @@ class Git::Store::Sha1File
   end
   
   #
-  # Writes out data to the file with the given hash. BE CAREFUL. This method
-  # does not check the hash against the data being sent. It assumes that you,
-  # the caller, have done your homework.
+  # Writes out the contents to a file. Automatically handles the task of
+  # choosing which file for you, so you don't fuck up.
   #
-  def self.write(hash, data)
-    path = self.filename(hash)
+  def self.write(contents)
+    path = self.filename(hash(contents))
     FileUtils.mkdir_p(File.dirname(path))
     File.open(path, 'w', PERMS) do |f|
-      f.write Zlib::Deflate.deflate(data)
+      f.write Zlib::Deflate.deflate(contents)
     end
   end
   

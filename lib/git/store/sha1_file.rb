@@ -95,7 +95,7 @@ class Git::Store::Sha1File
   
   def self.read(hash)
     path = self.filename(hash)
-    Zlib::Inflate.inflate( File.read( self.filename(path) ) )
+    Zlib::Inflate.inflate( File.read( path ) )
   end
   
   def self.write(hash, data)

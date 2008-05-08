@@ -19,7 +19,7 @@ class Git::Object
   end
   
   def save
-    file = Git::Store::Sha1File.new(self).save
+    file = Git::Store.create(self)
     file.hash
   end
   

@@ -1,6 +1,10 @@
 module Git::Store
+  def self.create(object)
+    Git::Store::LooseObject.create(object)
+  end
+  
   def self.find(hash)
-    Git::Store::Sha1File.find(hash)
+    Git::Store::LooseObject.find(hash)
   end
 end
 

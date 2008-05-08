@@ -108,7 +108,7 @@ class Git::Store::LooseObject
   #
   def save
     unless saved?
-      verify_type(hash, object.type)
+      self.class.verify_type(hash, object.type)
       
       type     = object.type
       data     = object.dump

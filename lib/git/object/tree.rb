@@ -1,28 +1,41 @@
 require 'enumerator'
+require 'set'
 
 class Git::Object::Tree < Git::Object
   INPUT_FORMAT = /^(\d+) (.+?)\0(.{20})/m
   
-  MODE_MASK = 0770000
+  MODE_MASK = 0777
   MODES     = {
-    0100000 => :file,
-    0040000 => :tree,
+    :tree   => 0040000,
+    :file   => 0100000,
+    :link   => 0120000,
+    :commit => 0160000,
   }
   
-  attr_accessor :trees
-  attr_accessor :files
+  attr_accessor :name
+  attr_accessor :contents
   
   def self.load(data)
+    tree = self.new()
+    
     each_entry(data) do |mode, name, hash|
-      type = MODES[mode & MODE_MASK]
+      type = MODES.invert[mode & ~MODE_MASK]
+      mode = mode & MODE_MASK
       
-      
+      object = Git::Object.new type,
+        :name => name,
+        :mode => mode,
+        :hash => hash
+        
+      self.contents << object
     end
     
-    self.new()
+    tree
   end
   
-  def initialize()
+  def initialize(options = {})
+    self.name     = options[:name]
+    self.contents = Set.new
   end
   
   def dump

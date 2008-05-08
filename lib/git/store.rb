@@ -8,4 +8,4 @@ module Git::Store
   end
 end
 
-require 'git/store/sha1_file'
+require 'git/store/loose_object'

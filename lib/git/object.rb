@@ -48,3 +48,5 @@ class Git::Object
     end
   end
 end
+
+require 'git/object/blob'

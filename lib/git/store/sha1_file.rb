@@ -26,8 +26,8 @@ class Git::Store::Sha1File
   PERMS         = 0444      # default permissions on Sha1Files
   SUBDIR_LENGTH = 2         # length of the subdirectory names
   
-  INPUT_FORMAT  = /(\w+) (\d+)\0(.*)/m  # regexp to match files on input
-  OUTPUT_FORMAT = "%s %d\0%s"           # printf-compatible string for output
+  INPUT_FORMAT  = /(\w+) (\d+)\0(.*)/m  # regexp to match canonical input
+  OUTPUT_FORMAT = "%s %d\0%s"           # sprintf-compatible output format
   
   VALID_OBJECTS = %w{ blob commit tree tag } # valid types inside a Sha1File
   
@@ -61,9 +61,7 @@ class Git::Store::Sha1File
     
     contents = read(hash)
     
-    verify_hash(hash, contents)
-    
-    # extract the contents of the file
+    # extract the header and contents of the file
     match  = contents.match(INPUT_FORMAT)
     type   = match[1]
     length = match[2].to_i
@@ -72,8 +70,13 @@ class Git::Store::Sha1File
     verify_type(hash, type)
     verify_length(hash, data, length)
     
-    # instantiate a new Sha1File using the retrieved object
-    self.new(Git::Object.load(type, data))
+    # instantiate the object with its type and data
+    object = Git::Object.load(type, data)
+    
+    verify_object_hash(hash, object)
+    
+    # instantiate one of ourselves using the fresh object
+    self.new(object)
   end
   
   #
@@ -103,6 +106,10 @@ class Git::Store::Sha1File
   #
   def save
     unless saved?
+      type     = object.type
+      data     = object.data
+      contents = OUTPUT_FORMAT % [ type, data.length, data ]
+      
       self.class.write(contents)
     end
     
@@ -135,21 +142,10 @@ class Git::Store::Sha1File
   end
   
   #
-  # Returns the uncompressed contents of the Sha1File as seen on disk.
-  #
-  def contents
-    type   = object.type
-    data   = object.dump
-    length = data.length
-    
-    OUTPUT_FORMAT % [type, length, data]
-  end
-  
-  #
-  # Calculates the SHA1 hash of the object's contents.
+  # The SHA1 hash of the file's contents.
   #
   def hash
-    self.class.hash(contents)
+    object.hash
   end
   
   private
@@ -184,27 +180,10 @@ class Git::Store::Sha1File
   end
   
   #
-  # Performs the SHA1 hash against a blob of data.
-  #
-  def self.hash(data)
-    Digest::SHA1.hexdigest(data)
-  end
-  
-  #
   # Checks whether or not a file exists with the given hash.
   #
   def self.exists?(hash)
     File.exist?(self.filename(hash))
-  end
-  
-  #
-  # Raises an exception if +hash+ doesn't correctly describe the contents of
-  # +data+.
-  #
-  def self.verify_hash(hash, data)
-    if self.hash(data) != hash
-      raise Git::CorruptSha1File, "contents of #{hash} didn't match checksum"
-    end
   end
   
   #
@@ -223,6 +202,16 @@ class Git::Store::Sha1File
   def self.verify_length(hash, data, length)
     if data.length != length
       raise Git::CorruptSha1File, "contents of #{hash} had the wrong length"
+    end
+  end
+  
+  #
+  # Raises an exception if +hash+ doesn't correctly describe the contents of
+  # +data+.
+  #
+  def self.verify_object_hash(hash, object)
+    if object.hash != hash
+      raise Git::CorruptSha1File, "contents of #{hash} didn't match hash"
     end
   end
 end

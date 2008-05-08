@@ -9,7 +9,9 @@ class Git::Object::Blob < Git::Object
     self.contents = contents
   end
   
-  def dump
-    contents
+  private
+  
+  def _dump
+    self.contents
   end
 end

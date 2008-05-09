@@ -12,8 +12,8 @@ class Git::Object::Tree < Git::Object
     :commit => 0160000,
   }
   
-  attr_accessor :name
-  attr_accessor :contents
+  attr_accessor :entries
+  attr_accessor :metadata
   
   def self.load(data)
     tree = self.new()
@@ -21,21 +21,17 @@ class Git::Object::Tree < Git::Object
     each_entry(data) do |mode, name, hash|
       type = MODES.invert[mode & ~MODE_MASK]
       mode = mode & MODE_MASK
-      
-      object = Git::Object.new type,
-        :name => name,
-        :mode => mode,
-        :hash => hash
         
-      self.contents << object
+      self.entries << Git::Object.find(hash)
+      self.metadata[hash] = { :name => name, :mode => mode }
     end
     
     tree
   end
   
-  def initialize(options = {})
-    self.name     = options[:name]
-    self.contents = Set.new
+  def initialize()
+    self.entries  = Set.new
+    self.metadata = {}
   end
   
   def dump

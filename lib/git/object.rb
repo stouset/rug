@@ -36,7 +36,7 @@ class Git::Object
   end
   
   def hash
-    Digest::SHA1.hexdigest(dump)
+    Digest::SHA1.hexdigest(canonical)
   end
   
   private

@@ -17,10 +17,6 @@ class Git::Object
     klass = const_get(type.capitalize)
     klass.new.load(dump)
   end
-  
-  def self.load(data)
-    self.new(data)
-  end
 
   def save
     file = Git::Store.create(self)

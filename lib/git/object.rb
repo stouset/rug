@@ -4,8 +4,7 @@ class Git::Object
   CANONICAL_FORMAT = "%s %d\0%s"
   
   def self.find(hash)
-    store  = Git::Store.find(hash)
-    object = store && store.object
+    object = Git::Store.find(hash)
     
     if object
       verify_object_type(object)

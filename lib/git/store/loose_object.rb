@@ -49,13 +49,14 @@ class Git::Store::LooseObject
   end
   
   #
-  # Finds a loose object by its hash. Loads the object into memory and peforms
-  # any necessary validation. Will return the loose object for that hash if it
-  # exists, and nil if not.
+  # Finds an object stored loosely on disk by its hash. Loads the object into
+  # memory if it exists, and performs any necessary validation. Will return
+  # the object belonging to the hash if it exists in the loose object database,
+  # and nil if not.
   #
   # Raises a CorruptLooseObject exception if the file contains any
   # discrepancies, such as a non-matching hash, incorrect length, or an
-  # invalid type.
+  # inappropriate type.
   #
   def self.find(hash)
     # exit early if there's no file
@@ -77,8 +78,8 @@ class Git::Store::LooseObject
     
     verify_object_hash(hash, object)
     
-    # instantiate one of ourselves using the fresh object
-    self.new(object)
+    # return the object that was found
+    object
   end
   
   #

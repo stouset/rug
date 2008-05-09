@@ -15,9 +15,13 @@ class Git::Object
   
   def self.load(type, dump)
     klass = const_get(type.capitalize)
-    klass.load(dump)
+    klass.new.load(dump)
   end
   
+  def self.load(data)
+    self.new(data)
+  end
+
   def save
     file = Git::Store.create(self)
     file.hash
@@ -33,6 +37,10 @@ class Git::Object
   
   def dump
     _dump
+  end
+  
+  def load(dump)
+    _load(dump)
   end
   
   def hash

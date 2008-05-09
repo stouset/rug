@@ -1,11 +1,7 @@
 class Git::Object::Blob < Git::Object
   attr_accessor :contents
   
-  def self.load(data)
-    self.new(data)
-  end
-  
-  def initialize(contents)
+  def initialize(contents = nil)
     self.contents = contents
   end
   
@@ -13,5 +9,9 @@ class Git::Object::Blob < Git::Object
   
   def _dump
     self.contents
+  end
+  
+  def _load(dump)
+    self.contents = dump
   end
 end

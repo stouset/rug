@@ -19,7 +19,7 @@ require 'fileutils'
 #
 # The entire rest of the file after the first ASCII NUL are the contents of
 # the Git::Object, whose format is specified on a per-object-type basis (check
-# the docs for any relevand Git::Object subclasses).
+# the docs for any relevant Git::Object subclasses).
 #
 class Git::Store::LooseObject
   PATH          = 'objects' # path within the git repository for loose objects

@@ -1,6 +1,6 @@
 module Git::Store
-  def self.create(object)
-    Git::Store::LooseObject.create(object)
+  def self.create(type, hash, dump)
+    Git::Store::LooseObject.create(type, hash, dump)
   end
   
   def self.find(hash)

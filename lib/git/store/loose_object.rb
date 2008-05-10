@@ -117,15 +117,15 @@ class Git::Store::LooseObject
       self.class.write(object.hash, contents)
     end
     
-    self
+    self.hash
   end
   
   #
-  # Removes the loose object's disk entry. Returns self.
+  # Removes the loose object's disk entry. Returns the object itself.
   #
   def destroy
     self.class.destroy(self.hash)
-    self
+    self.object
   end
   
   #

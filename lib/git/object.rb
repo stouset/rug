@@ -23,8 +23,7 @@ class Git::Object
   end
 
   def save
-    file = Git::Store.create(self)
-    file.hash
+    Git::Store.create(self)
   end
   
   def type

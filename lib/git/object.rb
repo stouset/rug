@@ -35,6 +35,7 @@ class Git::Object
   
   def load(dump)
     _load(dump)
+    self
   end
   
   def hash

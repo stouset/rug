@@ -1,5 +1,5 @@
 class Git::Object::Blob < Git::Object
-  attr_accessor :contents
+  lazy_accessor :contents
   
   def initialize(contents = nil)
     self.contents = contents

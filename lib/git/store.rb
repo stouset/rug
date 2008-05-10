@@ -6,6 +6,10 @@ module Git::Store
   def self.find(hash)
     Git::Store::LooseObject.find(hash)
   end
+  
+  def self.exists?(hash)
+    Git::Store::LooseObject.exists?(hash)
+  end
 end
 
 require 'git/store/loose_object'

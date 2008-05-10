@@ -1,6 +1,12 @@
+require 'git/lazy_object'
+
 require 'digest/sha1'
 
 class Git::Object
+  class << self
+    include Git::LazyObject
+  end
+  
   CANONICAL_FORMAT = "%s %d\0%s"
   
   def self.find(hash)
@@ -15,20 +21,6 @@ class Git::Object
   def self.load(type, dump)
     klass = get_klass(type)
     klass.new.load(dump)
-  end
-  
-  def self.lazy(type, hash)
-    klass  = get_klass(type)
-    object = klass.new
-    
-    object.class.lazy_attributes.each do |name|
-      class << o
-        alias_method "lazy_#{name}".to_sym, name
-        define_method(name) do
-          
-        end
-      end
-    end
   end
 
   def save

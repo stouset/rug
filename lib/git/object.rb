@@ -51,7 +51,7 @@ class Git::Object
   private
   
   def self.get_klass(type)
-    const_get(type.capitalize)
+    const_get(type.to_s.capitalize)
   end
   
   #

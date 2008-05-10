@@ -13,8 +13,22 @@ class Git::Object
   end
   
   def self.load(type, dump)
-    klass = const_get(type.capitalize)
+    klass = get_klass(type)
     klass.new.load(dump)
+  end
+  
+  def self.lazy(type, hash)
+    klass  = get_klass(type)
+    object = klass.new
+    
+    object.class.lazy_attributes.each do |name|
+      class << o
+        alias_method "lazy_#{name}".to_sym, name
+        define_method(name) do
+          
+        end
+      end
+    end
   end
 
   def save
@@ -43,6 +57,10 @@ class Git::Object
   end
   
   private
+  
+  def self.get_klass(type)
+    const_get(type.capitalize)
+  end
   
   #
   # Checks that the object is of the same class this method is being run in.

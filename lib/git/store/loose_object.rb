@@ -31,8 +31,8 @@ class Git::Store::LooseObject
   
   VALID_OBJECTS = %w{ blob commit tree tag } # valid types for a loose object
   
-  attr_accessor :type
   attr_accessor :hash
+  attr_accessor :type
   attr_accessor :dump
   
   #
@@ -46,8 +46,8 @@ class Git::Store::LooseObject
   # Instantiates and saves a new loose object, given the type of object, its
   # hash, and the dump of its contents.
   #
-  def self.create(type, hash, dump)
-    self.new(type, hash, dump).save
+  def self.create(hash, type, dump)
+    self.new(hash, type, dump).save
   end
   
   #
@@ -68,9 +68,10 @@ class Git::Store::LooseObject
     dump   = match.post_match
     
     verify_type(hash, type)
-    verify_length(hash, dump, length)
+    verify_length(hash, length, dump)
+    verify_hash(hash, type, dump)
     
-    self.new(type, hash, dump)
+    self.new(hash, type, dump)
   rescue Errno::ENOENT
     nil
   end
@@ -92,9 +93,9 @@ class Git::Store::LooseObject
   # is the type of the git object, hash is the SHA-1 hash of its canonical
   # form, and the dump is its raw dumped contents.
   #
-  def initialize(type, hash, dump)
-    self.type = type
+  def initialize(hash, type, dump)
     self.hash = hash
+    self.type = type
     self.dump = dump
   end
   
@@ -104,6 +105,8 @@ class Git::Store::LooseObject
   def save
     unless saved?
       self.class.verify_type(hash, type)
+      self.class.verify_length(hash, length, length)
+      self.class.verify_hash(hash, type, dump)
       
       contents = OUTPUT_FORMAT % [ type, length, dump ]
       
@@ -158,11 +161,7 @@ class Git::Store::LooseObject
   # or contents of the loose object between calls.
   #
   def object
-    object = Git::Object.load(type, dump)
-    
-    self.class.verify_object_hash(hash, object)
-    
-    object
+    Git::Object.load(type, dump)
   end
   
   private
@@ -215,8 +214,8 @@ class Git::Store::LooseObject
   # Raises an exception if the length of data doesn't match the specified
   # length.
   #
-  def self.verify_length(hash, dump, length)
-    if dump.length != length
+  def self.verify_length(hash, length, dump)
+    if length != dump.length
       raise Git::CorruptLooseObject, "contents of #{hash} had the wrong length"
     end
   end
@@ -225,8 +224,8 @@ class Git::Store::LooseObject
   # Raises an exception if the hash of an object doesn't match the hash
   # passed.
   #
-  def self.verify_object_hash(hash, object)
-    if hash != object.hash
+  def self.verify_hash(hash, type, dump)
+    if hash != Git::Object.hash(type, dump)
       raise Git::CorruptLooseObject, "contents of #{hash} did not match hash"
     end
   end

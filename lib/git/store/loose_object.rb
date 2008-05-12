@@ -26,7 +26,7 @@ class Git::Store::LooseObject
   PERMS         = 0444      # default permissions on loose objects
   SUBDIR_LENGTH = 2         # length of the subdirectory names
   
-  INPUT_FORMAT  = /(\w+) (\d+)\0/m  # regexp to match canonical input
+  INPUT_FORMAT  = /^(\w+) (\d+)\0/  # regexp to match canonical input
   OUTPUT_FORMAT = "%s %d\0%s"       # sprintf-compatible output format
   
   VALID_OBJECTS = %w{ blob commit tree tag } # valid types for a loose object
@@ -59,10 +59,9 @@ class Git::Store::LooseObject
   # discrepancies, such as an incorrect length or inappropriate type.
   #
   def self.find(hash)
-    contents = read(hash)
+    match = read(hash).match(INPUT_FORMAT)
     
     # extract the header and contents of the file
-    match  = contents.match(INPUT_FORMAT)
     type   = match[1]
     length = match[2].to_i
     dump   = match.post_match

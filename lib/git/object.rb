@@ -26,6 +26,7 @@ class Git::Object
   end
   
   def canonical
+    dump = self.dump # cache this, for speed
     CANONICAL_FORMAT % [ type, dump.length, dump ]
   end
   

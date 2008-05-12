@@ -17,6 +17,14 @@ class Git::Object
     klass.new.load(dump)
   end
   
+  def self.canonical(type, dump)
+    CANONICAL_FORMAT % [ type, dump.length, dump ]
+  end
+  
+  def self.hash(type, dump)
+    Digest::SHA1.hexdigest(canonical(type, dump))
+  end
+  
   def save
     Git::Store.create(self)
   end
@@ -26,8 +34,11 @@ class Git::Object
   end
   
   def canonical
-    dump = self.dump # cache this, for speed
-    CANONICAL_FORMAT % [ type, dump.length, dump ]
+    self.class.canonical(type, dump)
+  end
+  
+  def hash
+    self.class.hash(type, dump)
   end
   
   def dump
@@ -37,10 +48,6 @@ class Git::Object
   def load(dump)
     _load(dump)
     self
-  end
-  
-  def hash
-    Digest::SHA1.hexdigest(canonical)
   end
   
   private

@@ -26,8 +26,8 @@ class Git::Store::LooseObject
   PERMS         = 0444      # default permissions on loose objects
   SUBDIR_LENGTH = 2         # length of the subdirectory names
   
-  INPUT_FORMAT  = /(\w+) (\d+)\0(.*)/m  # regexp to match canonical input
-  OUTPUT_FORMAT = "%s %d\0%s"           # sprintf-compatible output format
+  INPUT_FORMAT  = /(\w+) (\d+)\0/m  # regexp to match canonical input
+  OUTPUT_FORMAT = "%s %d\0%s"       # sprintf-compatible output format
   
   VALID_OBJECTS = %w{ blob commit tree tag } # valid types for a loose object
   
@@ -68,7 +68,7 @@ class Git::Store::LooseObject
     match  = contents.match(INPUT_FORMAT)
     type   = match[1]
     length = match[2].to_i
-    dump   = match[3] 
+    dump   = match.post_match
     
     verify_type(hash, type)
     verify_length(hash, dump, length)

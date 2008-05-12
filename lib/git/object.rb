@@ -26,7 +26,7 @@ class Git::Object
   end
   
   def save
-    Git::Store.create(self)
+    Git::Store.create(self.hash, self.type, self.dump).hash
   end
   
   def type

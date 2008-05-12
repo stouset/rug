@@ -59,9 +59,6 @@ class Git::Store::LooseObject
   # discrepancies, such as an incorrect length or inappropriate type.
   #
   def self.find(hash)
-    # exit early if there's no file
-    return nil unless self.exists?(hash)
-    
     contents = read(hash)
     
     # extract the header and contents of the file
@@ -74,6 +71,8 @@ class Git::Store::LooseObject
     verify_length(hash, dump, length)
     
     self.new(type, hash, dump)
+  rescue Errno::ENOENT
+    nil
   end
   
   #

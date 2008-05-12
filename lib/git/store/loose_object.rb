@@ -99,10 +99,13 @@ class Git::Store::LooseObject
   end
   
   #
-  # Saves the contents of the object in a file on disk. Returns self.
+  # Saves the contents of the object in a file on disk. Returns self. Raises
+  # a CorruptLooseObject exception if the contents don't pass all validations.
   #
   def save
     unless saved?
+      # TODO: decide whether or not I should perform validations like this at
+      # save-time, or only read-time. They can be quite slow.
       self.class.verify_type(hash, type)
       self.class.verify_length(hash, length, length)
       self.class.verify_hash(hash, type, dump)
@@ -152,12 +155,8 @@ class Git::Store::LooseObject
   # only once this method is called. Validation is called to ensure the hash
   # of the object matches the one on disk.
   #
-  # NOTE: Calling this method is preferred over loading the object yourself
-  # using the accessors of the loose object, since this provides extra error
-  # checking against the object hash. However, repeated use of this method may
-  # be slow, since each call forces it to re-instantiate a new Git::Object.
-  # We do not cache the results, since they may change if you alter the type
-  # or contents of the loose object between calls.
+  # NOTE: Repeated use of this method may be slow, since each call forces it
+  # to re-instantiate a new Git::Object.
   #
   def object
     Git::Object.load(type, dump)

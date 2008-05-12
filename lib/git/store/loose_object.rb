@@ -193,9 +193,7 @@ class Git::Store::LooseObject
   # Returns the filename associated with a given hash.
   #
   def self.filename(hash)
-    subdir   = hash[0, SUBDIR_LENGTH]
-    filename = hash[SUBDIR_LENGTH .. -1]
-    self.path(subdir.to_s, filename.to_s)
+    self.path( hash.dup.insert(SUBDIR_LENGTH, File::SEPARATOR) )
   end
   
   #

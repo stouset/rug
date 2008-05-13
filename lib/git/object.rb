@@ -3,6 +3,10 @@ require 'digest/sha1'
 class Git::Object
   CANONICAL_FORMAT = "%s %d\0%s"
   
+  def self.klass(type)
+    const_get(type.to_s.capitalize)
+  end
+  
   def self.find(hash)
     store  = Git::Store.find(hash)
     object = store && store.object
@@ -13,8 +17,7 @@ class Git::Object
   end
   
   def self.load(type, dump)
-    klass = get_klass(type)
-    klass.new.load(dump)
+    klass(type).new.load(dump)
   end
   
   def self.canonical(type, dump)
@@ -51,10 +54,6 @@ class Git::Object
   end
   
   private
-  
-  def self.get_klass(type)
-    const_get(type.to_s.capitalize)
-  end
   
   #
   # Checks that the object is of the same class this method is being run in.

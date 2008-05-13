@@ -107,7 +107,7 @@ class Git::Store::LooseObject
       # TODO: decide whether or not I should perform validations like this at
       # save-time, or only read-time. They can be quite slow.
       self.class.verify_type(hash, type)
-      self.class.verify_length(hash, length, length)
+      self.class.verify_length(hash, length, dump)
       self.class.verify_hash(hash, type, dump)
       
       contents = OUTPUT_FORMAT % [ type, length, dump ]

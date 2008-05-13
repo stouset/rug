@@ -1,5 +1,3 @@
-require 'enumerator'
-
 class Git::Object::Tree < Git::Object
   INPUT_FORMAT = /(\d+) (.+?)\0(.{20})/m
   
@@ -14,9 +12,31 @@ class Git::Object::Tree < Git::Object
   attr_accessor :entries
   attr_accessor :metadata
   
-  def initialize()
+  def initialize(dir = nil)
     self.entries  = []
     self.metadata = {}
+    
+    if File.directory?(dir.to_s)
+      Dir.foreach(dir) do |name|
+        next if (%w{ . .. } << Git::GIT_DIR ).include?(name)
+        
+        name  = File.join(dir, name)
+        stat  = File.stat(name)
+        type  = self.class.type(stat.mode)
+        mode  = self.class.mode(stat.mode)
+        
+        entry = case type
+          when :blob then Git::Object::Blob.new(File.read(name))
+          when :tree then Git::Object::Tree.new(name)
+          when :link then Git::Object::Blob.new(File.readlink(name))
+        end
+        
+        entry.hash rescue next
+        
+        metadata[entry.hash] = { :name => name, :type => type, :mode => mode }
+        @entries << entry
+      end
+    end
   end
   
   def entries
@@ -28,16 +48,14 @@ class Git::Object::Tree < Git::Object
     end
   end
   
-  private
-  
   def _dump
-    'blah'
+    'dummy'
   end
   
   def _load(dump)
     each_entry(dump) do |mode, name, hash|
-      type = MODES.invert[mode & ~MODE_MASK]
-      mode = mode & MODE_MASK
+      type = self.class.type(mode)
+      mode = self.class.mode(mode)
       
       @entries << hash
       self.metadata[hash] = { :name => name, :type => type, :mode => mode }
@@ -45,6 +63,14 @@ class Git::Object::Tree < Git::Object
   end
   
   private
+  
+  def self.type(mode)
+    MODES.invert[mode & ~MODE_MASK]
+  end
+  
+  def self.mode(mode)
+    self.type(mode) == :blob ? mode & MODE_MASK : 0000
+  end
   
   def each_entry(dump)
     fields = dump.split(INPUT_FORMAT)

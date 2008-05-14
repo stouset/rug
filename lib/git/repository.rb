@@ -1,3 +1,5 @@
+require 'pathname'
+
 class Git::Repository
   GIT_DIR  = Pathname.new('.git')
   

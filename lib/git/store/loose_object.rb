@@ -1,8 +1,6 @@
 require 'digest/sha1'
 require 'zlib'
 
-require 'pathname'
-
 #
 # Stores Git::Objects on disk inside a file named according to the SHA-1 hash
 # of their canonical form. This inherently provides easy checks to prevent

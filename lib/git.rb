@@ -13,3 +13,7 @@ module Git
     File.join(GIT_DIR, *parts)
   end
 end
+
+require 'git/exceptions'
+require 'git/store'
+require 'git/object'

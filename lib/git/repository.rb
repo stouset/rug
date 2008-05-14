@@ -22,11 +22,4 @@ class Git::Repository
   def self.work_dir(*parts)
     WORK_DIR.join(*parts)
   end
-  
-  def self.under_work_dir?(path)
-    work = WORK_DIR.expand_path
-    path = path.expand_path
-    
-    path.relative_path_from(work).to_s[0, 2] != '..'
-  end
 end

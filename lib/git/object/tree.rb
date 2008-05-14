@@ -1,85 +1,127 @@
+require 'pathname'
+
 class Git::Object::Tree < Git::Object
   INPUT_FORMAT = /(\d+) (.+?)\0(.{20})/m
   
   MODE_MASK = 0777
-  MODES     = {
+  
+  MODE_FOR  = {
     :tree   => 0040000,
     :blob   => 0100000,
     :link   => 0120000,
-    :commit => 0160000,
+# submodules aren't supported yet
+#    :commit => 0160000,
   }
   
-  attr_accessor :entries
-  attr_accessor :metadata
+  TYPE_FOR = MODE_FOR.invert
   
-  def initialize(dir = nil)
-    self.entries  = []
-    self.metadata = {}
+  attr_accessor :entries
+  
+  def initialize(*paths)
+    self.entries = []
     
-    if File.directory?(dir.to_s)
-      Dir.foreach(dir) do |name|
-        next if (%w{ . .. } << Git::GIT_DIR ).include?(name)
-        
-        name  = File.join(dir, name)
-        stat  = File.stat(name)
-        type  = self.class.type(stat.mode)
-        mode  = self.class.mode(stat.mode)
-        
-        entry = case type
-          when :blob then Git::Object::Blob.new(File.read(name))
-          when :tree then Git::Object::Tree.new(name)
-          when :link then Git::Object::Blob.new(File.readlink(name))
-        end
-        
-        entry.hash rescue next
-        
-        metadata[entry.hash] = { :name => name, :type => type, :mode => mode }
-        @entries << entry
-      end
-    end
+    paths.each {|name| self << path }
   end
   
-  def entries
-    @entries.map! do |e|
-      case e
-        when String then Git::Object.klass(metadata[e][:type]).find(e)
-        else             e
-      end
+  def <<(path)
+    unless path.kind_of?(Pathname)
+      path = Pathname.new(path)
+    end
+    
+    unless path.subdir_of?(Git::WORK_DIR)
+      raise Git::InvalidTreeEntry, "#{path} is outside of repository"
+    end
+    
+    path = path.relative_path_from(Git::WORK_DIR)
+    
+    case self.class.type(path.lstat)
+      when :blob then add_file(path)
+      when :tree then add_dir(path)
+      when :link then add_link(path)
+      else raise Git::InvalidTreeEntry, "#{path} is of unknown type"
     end
   end
   
   def _dump
-    'dummy'
   end
   
   def _load(dump)
-    each_entry(dump) do |mode, name, hash|
-      type = self.class.type(mode)
-      mode = self.class.mode(mode)
-      
-      @entries << hash
-      self.metadata[hash] = { :name => name, :type => type, :mode => mode }
-    end
   end
   
   private
   
   def self.type(mode)
-    MODES.invert[mode & ~MODE_MASK]
+    TYPE_FOR[mode & ~MODE_MASK]
   end
   
   def self.mode(mode)
-    self.type(mode) == :blob ? mode & MODE_MASK : 0000
+    case self.type(mode)
+      when :blob then mode & MODE_MASK
+      else            0000
+    end
   end
   
-  def each_entry(dump)
-    fields = dump.split(INPUT_FORMAT)
-    fields.reject! {|f| f.empty? }
+  private
+  
+  def add_file(path)
+  end
+
+  # def each_entry(dump)
+  #   fields = dump.split(INPUT_FORMAT)
+  #   fields.reject! {|f| f.empty? }
+  #   
+  #   fields.enum_slice(3).each do |mode, name, hash|
+  #     mode = mode.to_i(8)             # mode is in octal
+  #     hash = hash.unpack('H40').first # hash is in binary format
+  #     yield(mode, name, hash)
+  #   end
+  # end
+end
+
+class Git::Object::Tree::Entry
+  attr_reader :name
+  attr_reader :mode
+  attr_reader :object
+  
+  def self.proxy(name, mode, type, hash)
+    proxy = self.new(name, mode, 'deferred')
+    proxy.send(:proxy_object!, type, hash)
+    proxy
+  end
+  
+  def initialize(name, mode, object)
+    self.name   = name
+    self.mode   = mode
+    self.object = object
+  end
+  
+  def type
+    object.type
+  end
+  
+  private
+  
+  attr_writer :name
+  attr_writer :mode
+  attr_writer :object
+  
+  def proxy_object!(type, hash)
+    metaclass = class << self; self; end
+    metaclass.send(:alias_method, :proxy_object,  :object)
+    metaclass.send(:alias_method, :proxy_type,    :type)
+
+    metaclass.send(:define_method, :object) do
+      unproxy_object!
+      self.object = Git::Object.klass(type).find(hash)
+    end
     
-    fields.enum_slice(3).each do |mode, name, hash|
-      mode = mode.to_i(8)             # mode is in octal
-      hash = hash.unpack('H40').first # hash is in binary format
-      yield(mode, name, hash)
+    metaclass.send(:define_method, :type) { type }
+  end
+  
+  def unproxy_object!
+    class << self
+      alias_method :object, :proxy_object
+      alias_method :type,   :proxy_type
     end
   end
 end

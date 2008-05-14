@@ -1,7 +1,7 @@
 require 'digest/sha1'
 require 'zlib'
 
-require 'fileutils'
+require 'pathname'
 
 #
 # Stores Git::Objects on disk inside a file named according to the SHA-1 hash
@@ -22,7 +22,6 @@ require 'fileutils'
 # the docs for any relevant Git::Object subclasses).
 #
 class Git::Store::LooseObject
-  PATH          = 'objects' # path within the git repository for loose objects
   PERMS         = 0444      # default permissions on loose objects
   SUBDIR_LENGTH = 2         # length of the subdirectory names
   
@@ -34,13 +33,6 @@ class Git::Store::LooseObject
   attr_accessor :hash
   attr_accessor :type
   attr_accessor :dump
-  
-  #
-  # Joins all +parts+ of the path, relative to the loose object root.
-  #
-  def self.path(*parts)
-    Git.path(PATH, *parts)
-  end
   
   #
   # Instantiates and saves a new loose object, given the type of object, its
@@ -81,10 +73,10 @@ class Git::Store::LooseObject
   # Returns nil if there was no file matching the hash identifier.
   #
   def self.destroy(hash)
-    if self.exists?(hash)
-      File.unlink(self.filename(hash))
-      hash
-    end
+    self.path(hash).unlink
+    hash
+  rescue Errno::ENOENT
+    nil
   end
   
   #
@@ -140,7 +132,7 @@ class Git::Store::LooseObject
   # Returns the filename of the loose object, based on its current contents.
   #
   def filename
-    self.class.filename(hash)
+    self.class.path(hash).to_s
   end
   
   #
@@ -168,8 +160,7 @@ class Git::Store::LooseObject
   # Returns the entire contents of the file with the given hash.
   #
   def self.read(hash)
-    path = self.filename(hash)
-    Zlib::Inflate.inflate( File.read( path ) )
+    Zlib::Inflate.inflate( self.path(hash).read )
   end
   
   #
@@ -178,25 +169,26 @@ class Git::Store::LooseObject
   # contents against the hash, so please be certain you're writing valid data.
   #
   def self.write(hash, contents)
-    path = self.filename(hash)
-    FileUtils.mkdir_p(File.dirname(path))
-    File.open(path, 'w', PERMS) do |f|
+    path = self.path(hash)
+    path.dirname.mkpath
+    path.open('w', PERMS) do |f|
       f.write Zlib::Deflate.deflate(contents)
     end
   end
   
   #
-  # Returns the filename associated with a given hash.
+  # Returns the path associated with a given hash.
   #
-  def self.filename(hash)
-    self.path( hash.dup.insert(SUBDIR_LENGTH, File::SEPARATOR) )
+  def self.path(hash)
+    name = hash.dup.insert(SUBDIR_LENGTH, File::SEPARATOR)
+    Git::Repository.object_path(name)
   end
   
   #
   # Checks whether or not a file exists with the given hash.
   #
   def self.exists?(hash)
-    File.exist?(self.filename(hash))
+    path.exist?
   end
   
   #

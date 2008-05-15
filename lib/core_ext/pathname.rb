@@ -1,4 +1,12 @@
 class Pathname
+  def dot?
+    to_s == '.'
+  end
+  
+  def dot_dot?
+    to_s == '..'
+  end
+  
   #
   # Returns true if +path+ is a subdirectory of self.
   #

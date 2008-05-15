@@ -2,6 +2,7 @@ require 'pathname'
 
 class Git::Object::Tree < Git::Object
   INPUT_FORMAT = /(\d+) (.+?)\0(.{20})/m
+  TREE_POSTFIX = '/'
   
   MODE_MASK = 0777
   
@@ -20,7 +21,7 @@ class Git::Object::Tree < Git::Object
   def initialize(*paths)
     self.entries = []
     
-    paths.each {|name| self << path }
+    paths.each {|path| self << path }
   end
   
   def <<(path)
@@ -28,15 +29,15 @@ class Git::Object::Tree < Git::Object
       path = Pathname.new(path)
     end
     
-    unless path.subdir_of?(Git::WORK_DIR)
+    unless path.subdir_of?(Git::Repository::WORK_DIR)
       raise Git::InvalidTreeEntry, "#{path} is outside of repository"
     end
     
-    path = path.relative_path_from(Git::WORK_DIR)
+    path = path.relative_path_from(Git::Repository::WORK_DIR)
     
-    case self.class.type(path.lstat)
+    case self.class.type(path.lstat.mode)
       when :blob then add_file(path)
-      when :tree then add_dir(path)
+      when :tree then add_path(path)
       when :link then add_link(path)
       else raise Git::InvalidTreeEntry, "#{path} is of unknown type"
     end
@@ -61,11 +62,77 @@ class Git::Object::Tree < Git::Object
     end
   end
   
-  private
+  def self.search(entries, name, is_dir)
+    name   = name.to_s
+    name   = name + TREE_POSTFIX if is_dir
+    
+    low  = 0
+    high = entries.length
+    
+    while low < high
+      mid    = (low + high) / 2
+      ename  = entries[mid].name
+      ename += TREE_POSTFIX if entries[mid].type == 'tree'
+      
+      case name <=> ename
+        when -1 then high = mid
+        when  0 then return mid
+        when  1 then low = mid + 1
+        else raise 'String#<=> returned something insane'
+      end
+    end
+      
+    -(low + 1)
+  end
+  
+  def self.insert(entries, index, entry)
+    entries.insert(-1 - index, entry)
+  end
   
   def add_file(path)
+    add_entry(path) { Git::Object::Blob.new(path.read) }
   end
-
+  
+  def add_dir(path)
+    puts path
+    return self if path.dot?
+    add_entry(path) { Git::Object::Tree.new }
+  end
+  
+  def add_path(path)
+    path.each_entry do |entry|
+      next if entry.dot? or entry.dot_dot?
+      next if entry.subdir_of?(Git::Repository::GIT_DIR)
+      self << path.join(entry)
+    end
+  end
+  
+  def add_link(path)
+    add_entry(path) { Git::Object::Blob.new(path.readlink) }
+  end
+  
+  def add_entry(path)
+    return if path.subdir_of?(Git::Repository::GIT_DIR)
+    
+    dirname, basename = path.split
+    
+    is_dir = path.directory? and not path.symlink?
+    tree   = add_dir(dirname)
+    index  = self.class.search(tree.entries, basename, is_dir)
+    
+    if (index < 0)
+      name   = basename.to_s
+      mode   = self.class.mode(path.lstat.mode)
+      object = yield
+      entry  = Git::Object::Tree::Entry.new(name, mode, object)
+      
+      self.class.insert(tree.entries, index, entry)
+      object
+    else
+      tree.entries[index].object
+    end
+  end
+  
   # def each_entry(dump)
   #   fields = dump.split(INPUT_FORMAT)
   #   fields.reject! {|f| f.empty? }
@@ -107,9 +174,9 @@ class Git::Object::Tree::Entry
   
   def proxy_object!(type, hash)
     metaclass = class << self; self; end
-    metaclass.send(:alias_method, :proxy_object,  :object)
-    metaclass.send(:alias_method, :proxy_type,    :type)
-
+    metaclass.send(:alias_method, :proxy_object, :object)
+    metaclass.send(:alias_method, :proxy_type,   :type)
+    
     metaclass.send(:define_method, :object) do
       unproxy_object!
       self.object = Git::Object.klass(type).find(hash)

@@ -1,8 +1,7 @@
 require 'pathname'
 
 class Git::Repository
-  GIT_DIR  = Pathname.new('.git')
-  
+  GIT_DIR    = Pathname.new('.git')
   WORK_DIR   = GIT_DIR.parent
   OBJECT_DIR = GIT_DIR.join('objects')
   

@@ -14,6 +14,6 @@ class Pathname
     parent = path.expand_path
     child  = self.expand_path
     
-    parent.relative_path_from(child).to_s[0, 2] == '..'
+    child.relative_path_from(parent).to_s[0, 2] != '..'
   end
 end

@@ -1,0 +1,17 @@
+#!/usr/bin/ruby -w
+
+require 'rubygems'
+require 'git'
+
+hashes = ARGV
+
+hashes.each do |hash|
+  unless Git::Object.exists?(hash)
+    raise Git::UnknownObjectError,
+      "hash #{hash} was ambiguous or doesn't exist"
+  end
+end
+
+hashes.each do |hash|
+  print Git::Object.find(hash)
+end

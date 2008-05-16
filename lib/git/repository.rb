@@ -10,7 +10,7 @@ class Git::Repository
   # working directory.
   #
   def self.work_path(*parts)
-    work_dir.join(*parts)
+    File.join(work_dir, *parts)
   end
   
   #
@@ -18,7 +18,7 @@ class Git::Repository
   # If no +parts+ are passed, simply returns the path to the git directory.
   #
   def self.git_path(*parts)
-    git_dir.join(*parts)
+    File.join(git_dir, *parts)
   end
   
   #
@@ -27,7 +27,7 @@ class Git::Repository
   # store directory.
   #
   def self.object_path(*parts)
-    git_dir.join(OBJECT_DIR_NAME, *parts)
+    File.join(git_dir, OBJECT_DIR_NAME, *parts)
   end
   
   private
@@ -45,7 +45,7 @@ class Git::Repository
   # the git dir will never end up changing on us mid-execution.
   #
   def self.git_dir
-    @git_dir ||= find_git_dir(Pathname.getwd)
+    @git_dir ||= find_git_dir(Dir.pwd)
   end
   
   #
@@ -54,9 +54,10 @@ class Git::Repository
   # exists in any of +path+'s parents.
   #
   def self.find_git_dir(path)
+    path = Pathname.new(path)
     path.expand_path.ascend do |p|
       p = p.join(GIT_DIR_NAME)
-      return p if p.exist?
+      return p.to_s if p.exist?
     end
     
     raise Git::RepositoryNotFound, path

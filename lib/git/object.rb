@@ -8,12 +8,11 @@ class Git::Object
   end
   
   def self.find(hash)
-    store  = Git::Store.find(hash)
-    object = store && store.object
-    
-    verify_object_type(object) if object
-    
-    object
+    if store = Git::Store.find(hash)
+      object = store.object
+      verify_object_type(object)
+      object
+    end
   end
   
   def self.exists?(hash)

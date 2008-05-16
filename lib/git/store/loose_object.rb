@@ -71,7 +71,7 @@ class Git::Store::LooseObject
   # Returns nil if there was no file matching the hash identifier.
   #
   def self.destroy(hash)
-    self.path(hash).unlink
+    File.unlink( path(hash) )
     hash
   rescue Errno::ENOENT
     nil
@@ -130,7 +130,7 @@ class Git::Store::LooseObject
   # Returns the filename of the loose object, based on its current contents.
   #
   def filename
-    self.class.path(hash).to_s
+    self.class.path(hash)
   end
   
   #
@@ -158,7 +158,7 @@ class Git::Store::LooseObject
   # Returns the entire contents of the file with the given hash.
   #
   def self.read(hash)
-    Zlib::Inflate.inflate( self.path(hash).read )
+    Zlib::Inflate.inflate( File.read( path(hash) ) )
   end
   
   #
@@ -168,8 +168,8 @@ class Git::Store::LooseObject
   #
   def self.write(hash, contents)
     path = self.path(hash)
-    path.dirname.mkpath
-    path.open('w', PERMS) do |f|
+    File.makedirs( File.dirname(path) )
+    File.open(path, 'w', PERMS) do |f|
       f.write Zlib::Deflate.deflate(contents)
     end
   end
@@ -186,7 +186,7 @@ class Git::Store::LooseObject
   # Checks whether or not a file exists with the given hash.
   #
   def self.exists?(hash)
-    path(hash).exist?
+    File.exists?( path(hash) )
   end
   
   #

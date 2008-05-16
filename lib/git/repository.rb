@@ -1,8 +1,8 @@
 require 'pathname'
 
 class Git::Repository
-  GIT_DIR_NAME    = '.git'   # the location of the git dir in a repo
-  OBJECT_DIR_NAME = 'object' # the location of the object dir in git
+  GIT_DIR_NAME    = '.git'    # the location of the git dir in a repo
+  OBJECT_DIR_NAME = 'objects' # the location of the object dir in git
   
   #
   # Joins all +parts+ to create a path relative to the current working
@@ -53,9 +53,10 @@ class Git::Repository
   # passed. Raises a Git::RepositoryNotFound exception if no git directory
   # exists in any of +path+'s parents.
   #
-  def find_git_dir(path)
+  def self.find_git_dir(path)
     path.expand_path.ascend do |p|
-      return p if p.join(GIT_DIR_NAME).exist?
+      p = p.join(GIT_DIR_NAME)
+      return p if p.exist?
     end
     
     raise Git::RepositoryNotFound, path

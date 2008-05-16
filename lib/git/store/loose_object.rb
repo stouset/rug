@@ -186,7 +186,7 @@ class Git::Store::LooseObject
   # Checks whether or not a file exists with the given hash.
   #
   def self.exists?(hash)
-    path.exist?
+    path(hash).exist?
   end
   
   #

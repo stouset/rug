@@ -16,6 +16,10 @@ class Git::Object
     object
   end
   
+  def self.exists?(hash)
+    Git::Store.exists?(hash)
+  end
+  
   def self.load(type, dump)
     klass(type).new.load(dump)
   end

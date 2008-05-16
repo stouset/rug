@@ -5,6 +5,13 @@ class Git::Object::Blob < Git::Object
     self.contents = contents
   end
   
+  #
+  # Pretty-printed output of the Blob contents.
+  #
+  def to_s
+    contents
+  end
+  
   private
   
   def _dump

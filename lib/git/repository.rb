@@ -1,4 +1,4 @@
-require 'pathname'
+require 'pathname2'
 
 class Git::Repository
   GIT_DIR_NAME    = '.git'    # the location of the git dir in a repo
@@ -10,7 +10,7 @@ class Git::Repository
   # working directory.
   #
   def self.work_path(*parts)
-    File.join(work_dir, *parts)
+    work_dir.join(*parts)
   end
   
   #
@@ -18,7 +18,7 @@ class Git::Repository
   # If no +parts+ are passed, simply returns the path to the git directory.
   #
   def self.git_path(*parts)
-    File.join(git_dir, *parts)
+    git_dir.join(*parts)
   end
   
   #
@@ -27,7 +27,7 @@ class Git::Repository
   # store directory.
   #
   def self.object_path(*parts)
-    File.join(git_dir, OBJECT_DIR_NAME, *parts)
+    git_dir.join(OBJECT_DIR_NAME, *parts)
   end
   
   private
@@ -57,7 +57,7 @@ class Git::Repository
     path = Pathname.new(path)
     path.expand_path.ascend do |p|
       p = p.join(GIT_DIR_NAME)
-      return p.to_s if p.exist?
+      return p if p.exist?
     end
     
     raise Git::RepositoryNotFound, path

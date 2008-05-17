@@ -1,4 +1,14 @@
+require 'pathname2'
+
 class Pathname
+  def join(*parts)
+    Pathname.new(File.join(to_s, *parts))
+  end
+  
+  def expand_path
+    Pathname.new(File.expand_path(to_s))
+  end
+  
   def dot?
     to_s == '.'
   end

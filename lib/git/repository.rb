@@ -1,4 +1,4 @@
-require 'pathname2'
+require 'pathname3'
 
 class Git::Repository
   GIT_DIR_NAME    = '.git'    # the location of the git dir in a repo
@@ -54,8 +54,7 @@ class Git::Repository
   # exists in any of +path+'s parents.
   #
   def self.find_git_dir(path)
-    path = Pathname.new(path)
-    path.expand_path.ascend do |p|
+    path.to_path.expand_path.ascend do |p|
       p = p.join(GIT_DIR_NAME)
       return p if p.exist?
     end

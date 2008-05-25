@@ -1,5 +1,3 @@
-require 'pathname3'
-
 class Git::Repository
   GIT_DIR_NAME    = '.git'    # the location of the git dir in a repo
   OBJECT_DIR_NAME = 'objects' # the location of the object dir in git

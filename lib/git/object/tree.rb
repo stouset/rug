@@ -1,5 +1,3 @@
-require 'pathname'
-
 class Git::Object::Tree < Git::Object
   INPUT_FORMAT = /(\d+) (.+?)\0(.{20})/m
   TREE_POSTFIX = '/'

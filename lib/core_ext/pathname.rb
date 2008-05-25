@@ -1,5 +1,13 @@
-require 'rubygems'
-require 'pathname3'
+#
+# Attempt to load pathname3 by default. If it doesn't exist, use pathname
+# instead.
+#
+begin
+  require 'rubygems'
+  require 'pathname3'
+rescue LoadError
+  require 'pathname'
+end
 
 class Pathname
   #

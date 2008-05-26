@@ -6,14 +6,12 @@ require 'git'
 hashes = ARGV
 
 hashes.map! do |hash|
-  object = Git::Object.find(hash)
-  
-  if object.nil?
-    raise Git::UnknownObjectError,
-      "hash #{hash} was ambiguous or doesn't exist"
-  else
-    object
+  if o = Git::Object.find(hash)
+    next o
   end
+  
+  raise Git::UnknownObjectError,
+    "hash #{hash} was ambiguous or doesn't exist"
 end
 
 print hashes

@@ -12,4 +12,4 @@ objects = ARGV.map do |hash|
     "hash #{hash} was ambiguous or doesn't exist"
 end
 
-print object
+print objects

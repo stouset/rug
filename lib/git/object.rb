@@ -28,7 +28,8 @@ require 'digest/sha1'
 #   
 # [<tt>Klass#load(dump) (private)</tt>]
 #   Must accept any string returned by _#dump_, and set the state of the
-#   object to whatever it's state was at the time of the dump.
+#   object to whatever it's state was at the time of the dump. May assume that
+#   the object has not been modified since instantiation.
 #
 class Git::Object
   CANONICAL_FORMAT = "%s %d\0%s"

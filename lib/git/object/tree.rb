@@ -117,18 +117,17 @@ class Git::Object::Tree < Git::Object
   end
   
   #
-  # Inserts an +entry+ into the +tree+ at the given +index+.
-  #
-  # Uses an index returned from search. If the entry already exists, replaces
-  # it.
+  # Inserts an +entry+ into the +tree+ at the given +index+. Uses an index
+  # returned from search. If the entry already exists, simply returns the
+  # existing one.
   #
   def self.insert(tree, index, entry)
-    case index > 0
-      when true then tree.entries[index] = entry
-      else           tree.entries.insert(invert_index(index), entry)
+    if index >= 0
+      tree.entries[index]
+    else
+      tree.entries.insert(invert_index(index), entry)
+      entry
     end
-
-    entry
   end
   
   #
@@ -164,31 +163,35 @@ class Git::Object::Tree < Git::Object
   
   #
   # Performs the actual addition of an entry to the tree. Inserts the object
-  # returned from +yield+ to the location at +path+. If the object is already
-  # in the tree, overwrites it.
+  # returned from +yield+ to the location at +path+. If the entry at +path+
+  # is already in the tree, does _not_ overwrite it.
   #
   # Creates parent trees as needed.
+  #
+  # Returns the object added.
   #
   def add_entry(path)
     dirname, basename = path.split
     
-    # create the entry, scope in begin/end just for nice grouping
+    # it really sucks that we have to instantiate an entire entry, plus call
+    # the block, plus do an lstat, _just_ to get sort comparison in search
+    # TODO: really need to rethink how to make this faster
     entry = begin
       name   = basename.to_s
-      mode   = self.class.mode(path.lstat.mode)
+      perms  = self.class.permissions(path.lstat.mode)
       object = yield
       
-      Git::Object::Tree::Entry.new(name, mode, object)
+      Git::Object::Tree::Entry.new(name, perms, object)
     end
-
-    # add the parent trees
-    tree  = add_dir(dirname)
-
-    # find the index of the location, then insert
+    
+    # find the parent tree
+    tree = add_dir(dirname)
+    
+    # search for the entry in the tree, and insert it
     index = self.class.search(tree, entry)
     self.class.insert(tree, index, entry).object
   end
-
+  
   #
   # Encodes and decodes an index negatively, for use when an entry isn't found
   # in the tree, but we still want the index for insertion purposes.

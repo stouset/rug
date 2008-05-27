@@ -32,8 +32,13 @@ class Git::Object::Tree < Git::Object
   # is a directory, adds all children of that directory to thes tree,
   # recursively.
   #
+  # Accesses the filesystem to determine the type of object at the path, its
+  # permissions, and any parts of the filesystem leading up to id.
+  #
   def <<(path)
+    # convert to a path, just in case
     path = path.to_path
+    path = path.relative_path_from(Git::Repository.work_path) if path.absolute?
     
     # raise an exception if the path isn't under the working tree
     unless path.subdir_of?(Git::Repository.work_path)
@@ -57,10 +62,18 @@ class Git::Object::Tree < Git::Object
   def _load(dump)
   end
   
+  #
+  # Determines the type of object a file will need based on its entire +mode+.
+  # Uses TYPE_FOR as a lookup table.
+  #
   def self.type(mode)
     TYPE_FOR[mode & ~MODE_MASK]
   end
   
+  #
+  # Extracts the permissions part of +mode+. Only blobs have permission bits
+  # set, so returns 0 for all other object types.
+  #
   def self.mode(mode)
     case self.type(mode)
       when :blob then mode & MODE_MASK

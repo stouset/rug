@@ -220,6 +220,13 @@ class Git::Object::Tree::Entry
     object.type
   end
   
+  def inspect
+    %{ #<#{self.class.name}:#{self.object_id.to_s(16)}
+         @name="#{name}"
+         @mode="#{mode.to_s(8)}"
+         @object="..."> }.strip.gsub(%r{\s+}, ' ')
+  end
+
   private
   
   attr_writer :name

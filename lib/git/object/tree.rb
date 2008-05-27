@@ -23,11 +23,9 @@ class Git::Object::Tree < Git::Object
   end
   
   def <<(path)
-    unless path.kind_of?(Pathname)
-      path = Pathname.new(path)
-    end
+    path = path.to_path
     
-    unless path.subdir_of?(Git::Repository::WORK_DIR)
+    unless path.subdir_of?(Git::Repository.work_path)
       raise Git::InvalidTreeEntry, "#{path} is outside of repository"
     end
     
@@ -98,9 +96,9 @@ class Git::Object::Tree < Git::Object
   end
   
   def add_path(path)
-    path.each_entry do |entry|
-      next if entry.dot? or entry.dot_dot?
-      next if entry.subdir_of?(Git::Repository::GIT_DIR)
+    path.children.each do |entry|
+      # skip over paths under the repository
+      next if entry.subdir_of?(Git::Repository.git_path)
       self << path.join(entry)
     end
   end

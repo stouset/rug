@@ -105,7 +105,7 @@ class Git::Object::Tree < Git::Object
       mid = (low + high) / 2
       
       case entry <=> entries[mid]
-        when -1 then high = mid - 1 # re-cap high end
+        when -1 then high = mid     # re-cap high end
         when  0 then return mid     # found entry
         when  1 then low = mid + 1  # re-cap low end
         else raise 'Entry<=> returned something insane'

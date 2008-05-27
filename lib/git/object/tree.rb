@@ -244,10 +244,15 @@ class Git::Object::Tree::Entry
   # Uses the git tree comparison function. Compares names in ASCIIbetic order,
   # but implicitly appends TREE_SUFFIX to directories if not already there.
   #
+  # Returns 0 if two entries have the same name. Otherwise, performs
+  # String#<=> against their git sort key as described.
+  #
   def <=>(other)
+    return 0 if self.name == other.name
+    
     self.class.sort_key(self) <=> self.class.sort_key(other)
   end
-
+  
   def type
     object.type
   end
@@ -270,16 +275,23 @@ class Git::Object::Tree::Entry
   attr_writer :object
   
   #
+  # Removes a trailing slash from a name, if one exists.
+  #
+  def self.normalized_name(name)
+    name.sub(%r{/$}, '')
+  end
+  
+  #
   # Retrieves the sort key for an entry. The sort key is the binary
   # representation of the name, with TREE_SUFFIX appended if the entry is a
   # tree.
   #
   def self.sort_key(entry)
-    name = entry.name
-    name + TREE_SUFFIX if entry.type == :tree && name[-1, 1] != TREE_SUFFIX
+    name  = entry.name.dup
+    name << TREE_SUFFIX if entry.type == :tree
     name.unpack('C*')
   end
-
+  
   #
   # Rewrites any methods that would potentially access disk or cause deep
   # recursion to lazily fetch the data needed for them, to avoid pulling the

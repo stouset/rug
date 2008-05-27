@@ -3,7 +3,7 @@
 class Git::Object::Tree < Git::Object
   INPUT_FORMAT = /(\d+) (.+?)\0(.{20})/m
 
-  MODE_MASK = 0777
+  PERMISSION_MASK = 0777
   
   MODE_FOR  = {
     :tree   => 0040000,
@@ -70,16 +70,16 @@ class Git::Object::Tree < Git::Object
   # Uses TYPE_FOR as a lookup table.
   #
   def self.type(mode)
-    TYPE_FOR[mode & ~MODE_MASK]
+    TYPE_FOR[mode & ~PERMISSION_MASK]
   end
   
   #
   # Extracts the permissions part of +mode+. Only blobs have permission bits
   # set, so returns 0 for all other object types.
   #
-  def self.mode(mode)
+  def self.permissions(mode)
     case self.type(mode)
-      when :blob then mode & MODE_MASK
+      when :blob then mode & PERMISSION_MASK
       else            0000
     end
   end
@@ -211,22 +211,26 @@ end
 
 class Git::Object::Tree::Entry
   include Comparable
-
+  
   TREE_SUFFIX = '/'
-
+  
   attr_reader :name
-  attr_reader :mode
+  attr_reader :perms
   attr_reader :object
   
-  def self.proxy(name, mode, type, hash)
-    proxy = self.new(name, mode, 'deferred')
+  def self.proxy(name, perms, type, hash)
+    proxy = self.new(name, perms, 'deferred')
     proxy.send(:proxy_object!, type, hash)
     proxy
   end
   
-  def initialize(name, mode, object)
-    self.name   = name
-    self.mode   = mode
+  #
+  # Creates a new tree entry with the given name, perms, and wrapped object.
+  # Normalizes the name to not contain a trailing slash.
+  #
+  def initialize(name, perms, object)
+    self.name   = self.class.normalized_name(name)
+    self.perms  = perms
     self.object = object
   end
   
@@ -245,6 +249,10 @@ class Git::Object::Tree::Entry
     object.type
   end
   
+  def mode
+    Git::Object::Tree::MODE_FOR[type] | perms
+  end
+  
   def inspect
     %{ #<#{self.class.name}:#{self.object_id.to_s(16)}
          @name="#{name}"
@@ -255,7 +263,7 @@ class Git::Object::Tree::Entry
   private
   
   attr_writer :name
-  attr_writer :mode
+  attr_writer :perms
   attr_writer :object
   
   #

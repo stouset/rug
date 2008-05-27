@@ -22,9 +22,7 @@ class Git::Object::Tree < Git::Object
   # Creates a new instance of a Tree. Calls +#<<+ on all paths passed.
   #
   def initialize(*paths)
-    self.entries = []
-    
-    paths.each {|path| self << path }
+    self.entries = paths.map {|path| self << path }
   end
   
   #

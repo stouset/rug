@@ -88,7 +88,6 @@ class Git::Object::Tree < Git::Object
   end
   
   def add_dir(path)
-    puts path
     return self if path.dot?
     add_entry(path) { Git::Object::Tree.new }
   end

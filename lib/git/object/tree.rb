@@ -88,17 +88,12 @@ class Git::Object::Tree < Git::Object
   # Performs a binary search on the immediate children of the tree for an
   # entry with the +name+ passed.
   #
-  # Returns the index of the entry, if found. If not found, returns a negative
-  # value that encodes the index the entry should be inserted in, to maintain
-  # sorted order. The negative number can be converted into the correct
-  # insertion index by using the invert_index function.
+  # Returns the index of the +entry+, in the +tree+, if found. If not found,
+  # returns a negative value that encodes the index the entry should be
+  # inserted in to maintain sorted order. The negative number can be converted
+  # into the correct insertion index by using the invert_index function.
   #
-  # Uses git's sorting rules to preserve order. T
-  #
-  #
-  #
-  #
-  #
+  # Uses the git tree sort order as defined in Git::Object::Tree::Entry#<=>.
   #
   def self.search(tree, entry)
     entries = tree.entries
@@ -110,17 +105,23 @@ class Git::Object::Tree < Git::Object
       mid = (low + high) / 2
       
       case entry <=> entries[mid]
-        when -1 then high = mid - 1
-        when  0 then return mid
-        when  1 then low = mid + 1
+        when -1 then high = mid - 1 # re-cap high end
+        when  0 then return mid     # found entry
+        when  1 then low = mid + 1  # re-cap low end
         else raise 'Entry<=> returned something insane'
       end
     end
 
-    # return the encoded index; low, mid, and high should be equal
+    # not found, return the encoded index
     invert_index(low)
   end
   
+  #
+  # Inserts an +entry+ into the +tree+ at the given +index+.
+  #
+  # Uses an index returned from search. If the entry already exists, replaces
+  # it.
+  #
   def self.insert(tree, index, entry)
     case index > 0
       when true then tree.entries[index] = entry
@@ -130,19 +131,33 @@ class Git::Object::Tree < Git::Object
     entry
   end
   
+  #
+  # Adds a file at +path+ to the tree.
+  #
   def add_file(path)
     add_entry(path) { Git::Object::Blob.new(path.read) }
   end
   
+  #
+  # Adds a directory (and none of its contents) at +path+ to the tree.
+  #
+  # Is a noop if the path is '.'.
+  #
   def add_dir(path)
     return self if path.dot?
     add_entry(path) { Git::Object::Tree.new }
   end
   
+  #
+  # Adds +path+ and all children to the tree.
+  #
   def add_path(path)
     path.children.each {|entry| self << path.join(entry) }
   end
   
+  #
+  # Adds the symlink at +path+ to the tree.
+  #
   def add_link(path)
     add_entry(path) { Git::Object::Blob.new(path.readlink) }
   end
@@ -166,12 +181,18 @@ class Git::Object::Tree < Git::Object
       Git::Object::Tree::Entry.new(name, mode, object)
     end
 
+    # add the parent trees
     tree  = add_dir(dirname)
-    index = self.class.search(tree, entry)
 
+    # find the index of the location, then insert
+    index = self.class.search(tree, entry)
     self.class.insert(tree, index, entry).object
   end
 
+  #
+  # Encodes and decodes an index negatively, for use when an entry isn't found
+  # in the tree, but we still want the index for insertion purposes.
+  #
   def self.invert_index(index)
     -(index + 1)
   end
@@ -248,6 +269,11 @@ class Git::Object::Tree::Entry
     name.unpack('C*')
   end
 
+  #
+  # Rewrites any methods that would potentially access disk or cause deep
+  # recursion to lazily fetch the data needed for them, to avoid pulling the
+  # entire contents of the repository any time a small piece is loaded.
+  #
   def proxy_object!(type, hash)
     metaclass = class << self; self; end
     metaclass.send(:alias_method, :proxy_object, :object)
@@ -261,6 +287,10 @@ class Git::Object::Tree::Entry
     metaclass.send(:define_method, :type) { type }
   end
   
+  #
+  # Replaces the proxied methods with their normal, unproxied versions. Called
+  # automatically when objects are fetched lazily.
+  #
   def unproxy_object!
     class << self
       alias_method :object, :proxy_object

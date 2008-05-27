@@ -1,3 +1,5 @@
+#
+#
 class Git::Object::Tree < Git::Object
   INPUT_FORMAT = /(\d+) (.+?)\0(.{20})/m
   TREE_POSTFIX = '/'
@@ -16,19 +18,30 @@ class Git::Object::Tree < Git::Object
   
   attr_accessor :entries
   
+  #
+  # Creates a new instance of a Tree. Calls +#<<+ on all paths passed.
+  #
   def initialize(*paths)
     self.entries = []
     
     paths.each {|path| self << path }
   end
   
+  #
+  # Appends a +path+ to the tree. If +path+ is a file or a symlink, adds the
+  # file to the tree and any directories needed to reach that file. If +path+
+  # is a directory, adds all children of that directory to thes tree,
+  # recursively.
+  #
   def <<(path)
     path = path.to_path
     
+    # raise an exception if the path isn't under the working tree
     unless path.subdir_of?(Git::Repository.work_path)
       raise Git::InvalidTreeEntry, "#{path} is outside of repository"
     end
     
+    # call the specific add_* for the type of entry
     case self.class.type(path.lstat.mode)
       when :blob then add_file(path)
       when :tree then add_path(path)

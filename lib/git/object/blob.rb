@@ -1,3 +1,8 @@
+#
+# Represents a Blob. Blobs contain raw text data. In the case of files, they
+# contain the raw, unformatted contents of the file. Symlinks are represented
+# by a Blob containing only the filename of the symlink target.
+#
 class Git::Object::Blob < Git::Object
   attr_accessor :contents
   

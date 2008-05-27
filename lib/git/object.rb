@@ -4,10 +4,10 @@ require 'digest/sha1'
 # Wraps the concept of an object in Git. Any versioned data in Git is
 # considered an object. Current object types are:
 #
-# [blob]   raw file data, or the contents of a symlink
-# [tree]   contains other trees, files, or links
-# [commit] a versioned checkpoint, with parent(s), child(ren), and a tree
-# [tag]    a named pointer to a commit
+# - blob
+# - tree
+# - commit
+# - tag
 #
 # Any subclass +Klass+ of Git::Object is expected to conform to the following
 # API:
@@ -96,7 +96,9 @@ class Git::Object
   # Checks that the object is of the same class this method is being run in.
   # Raises an exception if this is not the case. This allows us to check that
   # an object loaded through Git::Object is any kind of Git::Object, but an
-  # object loaded through Git::Object::Blob must be a blob.
+  # object loaded through Git::Object::Blob must be a blob, even though the
+  # method in the subclass is technically capable of loading any type of
+  # object.
   #
   def self.verify_object_type(object)
     unless object.kind_of?(self)

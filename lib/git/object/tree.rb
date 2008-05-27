@@ -44,7 +44,7 @@ class Git::Object::Tree < Git::Object
       when :blob then add_file(path)
       when :tree then add_path(path)
       when :link then add_link(path)
-      else raise Git::InvalidTreeEntry, "#{path} is of unknown type"
+      else raise Git::InvalidTreeEntry, "#{path} is of unsupported type"
     end
   end
   

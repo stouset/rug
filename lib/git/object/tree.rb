@@ -1,8 +1,7 @@
-#
-#
 class Git::Object::Tree < Git::Object
-  INPUT_FORMAT = /(\d+) (.+?)\0(.{20})/m
-
+  INPUT_FORMAT  = /(\d+) (.+?)\0(.{20})/m
+  OUTPUT_FORMAT = "%o %s\0%s"
+  
   PERMISSION_MASK = 0777
   
   MODE_FOR  = {
@@ -60,6 +59,12 @@ class Git::Object::Tree < Git::Object
   private
   
   def _dump
+    entries.map do |entry|
+      name = entry.name
+      mode = entry.mode
+      hash = [entry.object.hash].pack('H40')
+      OUTPUT_FORMAT % [mode, name, hash]
+    end.join('')
   end
   
   def _load(dump)

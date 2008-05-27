@@ -1,6 +1,9 @@
 class Git::Object::Blob < Git::Object
   attr_accessor :contents
   
+  #
+  # Creates a new instance of a Blob with optional raw +contents+.
+  #
   def initialize(contents = nil)
     self.contents = contents
   end

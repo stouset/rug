@@ -29,8 +29,6 @@ class Git::Object::Tree < Git::Object
       raise Git::InvalidTreeEntry, "#{path} is outside of repository"
     end
     
-    path = path.relative_path_from(Git::Repository::WORK_DIR)
-    
     case self.class.type(path.lstat.mode)
       when :blob then add_file(path)
       when :tree then add_path(path)

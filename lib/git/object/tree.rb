@@ -21,7 +21,7 @@ class Git::Object::Tree < Git::Object
   #
   def initialize(*paths)
     self.entries = []
-
+    
     paths.each {|path| self << path }
   end
   
@@ -41,7 +41,7 @@ class Git::Object::Tree < Git::Object
     
     # don't add any subdir of the repository path
     return if path.subdir_of?(Git::Repository.git_path)
-
+    
     # raise an exception if the path isn't under the working tree
     unless path.subdir_of?(Git::Repository.work_path)
       raise Git::InvalidTreeEntry, "#{path} is outside of repository"
@@ -116,7 +116,7 @@ class Git::Object::Tree < Git::Object
         else raise 'Entry<=> returned something insane'
       end
     end
-
+    
     # not found, return the encoded index
     invert_index(low)
   end
@@ -284,7 +284,7 @@ class Git::Object::Tree::Entry
          @mode="#{mode.to_s(8)}"
          @object="..."> }.strip.gsub(%r{\s+}, ' ')
   end
-
+  
   private
   
   attr_writer :name

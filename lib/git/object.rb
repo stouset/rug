@@ -37,6 +37,10 @@ class Git::Object
     const_get(type.to_s.capitalize)
   end
   
+  def self.create(*args)
+    new(*args).save
+  end
+  
   def self.find(hash)
     if store = Git::Store.find(hash)
       object = store.object

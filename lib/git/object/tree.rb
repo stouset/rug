@@ -136,16 +136,23 @@ class Git::Object::Tree < Git::Object
   end
   
   #
-  # Adds a file at +path+ to the tree.
+  # Adds a file at +path+ to the tree. Expects a relative path.
+  #
+  # Returns the blob added.
   #
   def add_file(path)
     add_entry(path) { Git::Object::Blob.new(path.read) }
   end
   
   #
-  # Adds a directory (and none of its contents) at +path+ to the tree.
+  # Adds a directory (and none of its contents) at +path+ to the tree. Is a
+  # noop if the path is '.'. Expects a relative path.
   #
-  # Is a noop if the path is '.'.
+  # There's an implicit recursion here between add_dir and add_entry. The
+  # add_dir method attempts to add the entire directory. In add_entry, the
+  # path is split, and the remaining directory component is added via add_dir.
+  #
+  # Returns the tree added.
   #
   def add_dir(path)
     return self if path.dot?
@@ -153,14 +160,18 @@ class Git::Object::Tree < Git::Object
   end
   
   #
-  # Adds +path+ and all children to the tree.
+  # Adds +path+ and all children to the tree. Expects a relative path.
+  #
+  # Returns the tree added.
   #
   def add_path(path)
     path.children.each {|entry| self << path.join(entry) }
   end
   
   #
-  # Adds the symlink at +path+ to the tree.
+  # Adds the symlink at +path+ to the tree. Expects a relative path.
+  #
+  # Returns the link added.
   #
   def add_link(path)
     add_entry(path) { Git::Object::Blob.new(path.readlink) }
@@ -198,8 +209,9 @@ class Git::Object::Tree < Git::Object
   end
   
   #
-  # Encodes and decodes an index negatively, for use when an entry isn't found
-  # in the tree, but we still want the index for insertion purposes.
+  # Encodes and decodes an index for use when an entry isn't found in the
+  # tree, but we still want the index for insertion purposes and need to
+  # distinguish between the two cases.
   #
   def self.invert_index(index)
     -(index + 1)

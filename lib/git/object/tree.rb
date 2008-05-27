@@ -88,6 +88,15 @@ class Git::Object::Tree < Git::Object
   end
   
   def _load(dump)
+    fields = dump.split(INPUT_FORMAT)
+    fields.enum_slice(4).each do |dummy, mode, name, hash|
+      mode  = mode.to_i(8)
+      type  = self.class.type(mode)
+      perms = self.class.permissions(mode)
+      hash  = hash.unpack('H40').first
+      
+      entries << Git::Object::Tree::Entry.proxy(name, perms, type, hash)
+    end
   end
   
   #
@@ -236,17 +245,6 @@ class Git::Object::Tree < Git::Object
   def self.invert_index(index)
     -(index + 1)
   end
-  
-  # def each_entry(dump)
-  #   fields = dump.split(INPUT_FORMAT)
-  #   fields.reject! {|f| f.empty? }
-  #   
-  #   fields.enum_slice(3).each do |mode, name, hash|
-  #     mode = mode.to_i(8)             # mode is in octal
-  #     hash = hash.unpack('H40').first # hash is in binary format
-  #     yield(mode, name, hash)
-  #   end
-  # end
 end
 
 class Git::Object::Tree::Entry
@@ -259,7 +257,7 @@ class Git::Object::Tree::Entry
   attr_reader :object
   
   def self.proxy(name, perms, type, hash)
-    proxy = self.new(name, perms, 'deferred')
+    proxy = self.new(name, perms, nil)
     proxy.send(:proxy_object!, type, hash)
     proxy
   end

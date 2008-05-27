@@ -48,13 +48,13 @@ class Git::Object::Tree < Git::Object
     end
   end
   
+  private
+  
   def _dump
   end
   
   def _load(dump)
   end
-  
-  private
   
   def self.type(mode)
     TYPE_FOR[mode & ~MODE_MASK]

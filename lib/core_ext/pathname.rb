@@ -1,6 +1,8 @@
 #
 # Attempt to load pathname3 by default. If it doesn't exist, use pathname
 # instead.
+#--
+# TODO: test with pathname
 #
 begin
   require 'rubygems'

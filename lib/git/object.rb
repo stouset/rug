@@ -70,7 +70,7 @@ class Git::Object
   end
   
   def type
-    self.class.name.downcase.sub!(/^.*::/, '')
+    self.class.name.downcase.sub!(/^.*::/, '').to_sym
   end
   
   def canonical

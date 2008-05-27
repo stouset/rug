@@ -56,6 +56,15 @@ class Git::Object::Tree < Git::Object
     end
   end
   
+  def delete(path)
+    path = path.to_path
+    path = path.relative_path_from(Git::Repository.work_path) if path.absolute?
+    
+    dirname, basename = path.split
+    
+    # TODO: finish
+  end
+  
   def to_s
     entries.map do |entry|
       mode = entry.mode

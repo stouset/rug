@@ -105,7 +105,7 @@ class Git::Object::Tree < Git::Object
   end
   
   def add_entry(path)
-    return if path.subdir_of?(Git::Repository::GIT_DIR)
+    return if path.subdir_of?(Git::Repository.git_path)
     
     dirname, basename = path.split
     

@@ -19,6 +19,9 @@ require 'zlib'
 # the Git::Object, whose format is specified on a per-object-type basis (check
 # the docs for any relevant Git::Object subclasses).
 #
+# The only valid types of object which can be stored in the loose object
+# format are enumerated in VALID_OBJECTS.
+#
 class Git::Store::LooseObject
   PERMS         = 0444      # default permissions on loose objects
   SUBDIR_LENGTH = 2         # length of the subdirectory names

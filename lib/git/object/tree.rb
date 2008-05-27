@@ -1,4 +1,6 @@
 class Git::Object::Tree < Git::Object
+  include Enumerable
+  
   INPUT_FORMAT  = /(\d+) (.+?)\0(.{20})/m
   OUTPUT_FORMAT = "%o %s\0%s"
   
@@ -54,6 +56,10 @@ class Git::Object::Tree < Git::Object
       when :link then add_link(path)
       else raise Git::InvalidTreeEntry, "#{path} is of unsupported type"
     end
+  end
+  
+  # TODO: iterate deeply
+  def each
   end
   
   def delete(path)

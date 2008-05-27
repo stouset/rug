@@ -2,8 +2,7 @@
 #
 class Git::Object::Tree < Git::Object
   INPUT_FORMAT = /(\d+) (.+?)\0(.{20})/m
-  TREE_POSTFIX = '/'
-  
+
   MODE_MASK = 0777
   
   MODE_FOR  = {
@@ -67,31 +66,50 @@ class Git::Object::Tree < Git::Object
     end
   end
   
-  def self.search(entries, name, is_dir)
-    name   = name.to_s
-    name   = name + TREE_POSTFIX if is_dir
+  #
+  # Performs a binary search on the immediate children of the tree for an
+  # entry with the +name+ passed.
+  #
+  # Returns the index of the entry, if found. If not found, returns a negative
+  # value that encodes the index the entry should be inserted in, to maintain
+  # sorted order. The negative number can be converted into the correct
+  # insertion index by using the invert_index function.
+  #
+  # Uses git's sorting rules to preserve order. T
+  #
+  #
+  #
+  #
+  #
+  #
+  def self.search(tree, entry)
+    entries = tree.entries
     
     low  = 0
-    high = entries.length
+    high = entries.length # not length - 1, because it could sort after
     
     while low < high
-      mid    = (low + high) / 2
-      ename  = entries[mid].name
-      ename += TREE_POSTFIX if entries[mid].type == 'tree'
+      mid = (low + high) / 2
       
-      case name <=> ename
-        when -1 then high = mid
+      case entry <=> entries[mid]
+        when -1 then high = mid - 1
         when  0 then return mid
         when  1 then low = mid + 1
-        else raise 'String#<=> returned something insane'
+        else raise 'Entry<=> returned something insane'
       end
     end
-      
-    -(low + 1)
+
+    # return the encoded index; low, mid, and high should be equal
+    invert_index(low)
   end
   
-  def self.insert(entries, index, entry)
-    entries.insert(-1 - index, entry)
+  def self.insert(tree, index, entry)
+    case index > 0
+      when true then tree.entries[index] = entry
+      else           tree.entries.insert(invert_index(index), entry)
+    end
+
+    entry
   end
   
   def add_file(path)
@@ -120,21 +138,23 @@ class Git::Object::Tree < Git::Object
     
     dirname, basename = path.split
     
-    is_dir = path.directory? and not path.symlink?
-    tree   = add_dir(dirname)
-    index  = self.class.search(tree.entries, basename, is_dir)
-    
-    if (index < 0)
+    # create the entry, scope in begin/end just for nice grouping
+    entry = begin
       name   = basename.to_s
       mode   = self.class.mode(path.lstat.mode)
       object = yield
-      entry  = Git::Object::Tree::Entry.new(name, mode, object)
       
-      self.class.insert(tree.entries, index, entry)
-      object
-    else
-      tree.entries[index].object
+      Git::Object::Tree::Entry.new(name, mode, object)
     end
+
+    tree  = add_dir(dirname)
+    index = self.class.search(tree, entry)
+
+    self.class.insert(tree, index, entry).object
+  end
+
+  def self.invert_index(index)
+    -(index + 1)
   end
   
   # def each_entry(dump)
@@ -150,6 +170,10 @@ class Git::Object::Tree < Git::Object
 end
 
 class Git::Object::Tree::Entry
+  include Comparable
+
+  TREE_SUFFIX = '/'
+
   attr_reader :name
   attr_reader :mode
   attr_reader :object
@@ -166,6 +190,17 @@ class Git::Object::Tree::Entry
     self.object = object
   end
   
+  #
+  # The comparison function for tree entries. Only compares the binary
+  # resperentation of entry names.
+  #
+  # Uses the git tree comparison function. Compares names in ASCIIbetic order,
+  # but implicitly appends TREE_SUFFIX to directories if not already there.
+  #
+  def <=>(other)
+    self.class.sort_key(self) <=> self.class.sort_key(other)
+  end
+
   def type
     object.type
   end
@@ -176,6 +211,17 @@ class Git::Object::Tree::Entry
   attr_writer :mode
   attr_writer :object
   
+  #
+  # Retrieves the sort key for an entry. The sort key is the binary
+  # representation of the name, with TREE_SUFFIX appended if the entry is a
+  # tree.
+  #
+  def self.sort_key(entry)
+    name = entry.name
+    name + TREE_SUFFIX if entry.type == :tree && name[-1, 1] != TREE_SUFFIX
+    name.unpack('C*')
+  end
+
   def proxy_object!(type, hash)
     metaclass = class << self; self; end
     metaclass.send(:alias_method, :proxy_object, :object)

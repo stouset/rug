@@ -36,10 +36,13 @@ class Git::Object::Tree < Git::Object
   # permissions, and any parts of the filesystem leading up to id.
   #
   def <<(path)
-    # convert to a path, just in case
+    # convert to a relative path, just in case
     path = path.to_path
     path = path.relative_path_from(Git::Repository.work_path) if path.absolute?
     
+    # don't add any subdir of the repository path
+    return if path.subdir_of?(Git::Repository.git_path)
+
     # raise an exception if the path isn't under the working tree
     unless path.subdir_of?(Git::Repository.work_path)
       raise Git::InvalidTreeEntry, "#{path} is outside of repository"
@@ -137,20 +140,21 @@ class Git::Object::Tree < Git::Object
   end
   
   def add_path(path)
-    path.children.each do |entry|
-      # skip over paths under the repository
-      next if entry.subdir_of?(Git::Repository.git_path)
-      self << path.join(entry)
-    end
+    path.children.each {|entry| self << path.join(entry) }
   end
   
   def add_link(path)
     add_entry(path) { Git::Object::Blob.new(path.readlink) }
   end
   
+  #
+  # Performs the actual addition of an entry to the tree. Inserts the object
+  # returned from +yield+ to the location at +path+. If the object is already
+  # in the tree, overwrites it.
+  #
+  # Creates parent trees as needed.
+  #
   def add_entry(path)
-    return if path.subdir_of?(Git::Repository.git_path)
-    
     dirname, basename = path.split
     
     # create the entry, scope in begin/end just for nice grouping

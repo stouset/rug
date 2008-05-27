@@ -56,6 +56,17 @@ class Git::Object::Tree < Git::Object
     end
   end
   
+  def to_s
+    entries.map do |entry|
+      mode = entry.mode
+      type = entry.type
+      hash = entry.object.hash
+      name = entry.name
+      
+      "%06o %s %s\t%s" % [ mode, type, hash, name ]
+    end.join("\n")
+  end
+  
   private
   
   def _dump

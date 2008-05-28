@@ -1,7 +1,9 @@
+require 'enumerator'
+
 class Git::Object::Tree < Git::Object
   include Enumerable
   
-  INPUT_FORMAT  = /(\d+) (.+?)\0(.{20})/m
+  INPUT_FORMAT  = /(\d+) (\w+)\0(.{20})/m
   OUTPUT_FORMAT = "%o %s\0%s"
   
   PERMISSION_MASK = 0777

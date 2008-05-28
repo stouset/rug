@@ -6,8 +6,9 @@ class Git::Object::Tree < Git::Object
   include Enumerable
   include Proxyable
   
-  INPUT_FORMAT  = /(\d+) (\w+)\0(.{20})/m
+  INPUT_FORMAT  = /(\d+) ([^\0]+)\0(.{20})/m
   OUTPUT_FORMAT = "%o %s\0%s"
+  PRETTY_FORMAT = "%06o %s %s\t%s"
   
   PERMISSION_MASK = 0777
   
@@ -86,8 +87,8 @@ class Git::Object::Tree < Git::Object
       hash = entry.object.hash
       name = entry.name
       
-      "%06o %s %s\t%s" % [ mode, type, hash, name ]
-    end.join("\n")
+      PRETTY_FORMAT % [ mode, type, hash, name ]
+    end.join("\n") << "\n"
   end
   
   private

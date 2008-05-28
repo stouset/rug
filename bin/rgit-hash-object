@@ -1,0 +1,6 @@
+#!/usr/bin/ruby -w
+
+require 'rubygems'
+require 'rgit/hash-object'
+
+Rgit::HashObject.run!

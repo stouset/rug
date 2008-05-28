@@ -22,6 +22,10 @@ require 'digest/sha1'
 #   If the Object subclass points to other git objects (e.g., trees or
 #   commits), it must define this method to return the list of all such
 #   objects. Only one level of depth is necessary.
+#
+# [<tt>Klass#inspect</tt> (optional)]
+#   If the Object subclass points to other git objects, the inspect method
+#   should not display children, to sanely deal with deeply-nested objects.
 # 
 # [<tt>Klass#to_s</tt>]
 #   Must represent the contents in a string-like fashion. Must be directly

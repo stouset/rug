@@ -60,8 +60,11 @@ class Git::Object::Tree < Git::Object
     end
   end
   
-  # TODO: iterate deeply
-  def each
+  def each(&block)
+    entries.each do |entry|
+      block.call(entry)
+      entry.object.each(&block) if entry.object.kind_of?(self.class)
+    end
   end
   
   def delete(path)

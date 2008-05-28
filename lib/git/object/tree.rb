@@ -111,8 +111,8 @@ class Git::Object::Tree < Git::Object
         perms = self.class.permissions(mode)
         hash  = hash.unpack('H40').first
         
-        object   = Git::Object.klass(type).find(hash)
-        entries << Git::Object::Tree::Entry.new(name, perms, object)
+        object   = Git::Object.find(hash)
+        entries << Git::Object::Tree::Entry.new(name, type, perms, object)
       end
     end
   end
@@ -226,12 +226,10 @@ class Git::Object::Tree < Git::Object
   
   #
   # Performs the actual addition of an entry to the tree. Inserts the object
-  # returned from +yield+ to the location at +path+. If the entry at +path+
-  # is already in the tree, does _not_ overwrite it.
+  # returned from the block to the location at +path+. If an entry already
+  # exists at +path+, is a no-op.
   #
-  # Creates parent trees as needed.
-  #
-  # Returns the object added.
+  # Creates parent trees as needed. Returns the _object_ added, not its entry.
   #
   def add_entry(path)
     dirname, basename = path.split
@@ -241,10 +239,12 @@ class Git::Object::Tree < Git::Object
     # TODO: really need to rethink how to make this faster
     entry = begin
       name   = basename.to_s
-      perms  = self.class.permissions(path.lstat.mode)
+      mode   = path.lstat.mode
+      type   = self.class.type(mode)
+      perms  = self.class.permissions(mode)
       object = yield
       
-      Git::Object::Tree::Entry.new(name, perms, object)
+      Git::Object::Tree::Entry.new(name, type, perms, object)
     end
     
     # find the parent tree
@@ -271,43 +271,29 @@ class Git::Object::Tree::Entry
   TREE_SUFFIX = '/'
   
   attr_reader :name
+  attr_reader :type
   attr_reader :perms
   attr_reader :object
   
-  #
-  # Creates a new tree entry with the given name, perms, and wrapped object.
-  # Normalizes the name to not contain a trailing slash.
-  #
-  def initialize(name, perms, object)
-    self.name   = name.dup
+  attr_reader :sort_key
+  
+  def initialize(name, type, perms, object)
+    self.name   = name
+    self.type   = type
     self.perms  = perms
     self.object = object
     
-    self.name.chop! if self.name[-1, 1] == '/'
-  end
-  
-  #
-  # The comparison function for tree entries. Only compares the binary
-  # resperentation of entry names.
-  #
-  # Uses the git tree comparison function. Compares names in ASCIIbetic order,
-  # but implicitly appends TREE_SUFFIX to directories if not already there.
-  #
-  # Returns 0 if two entries have the same name. Otherwise, performs
-  # String#<=> against their git sort key as described.
-  #
-  def <=>(other)
-    return 0 if self.name == other.name
+    # prime this before freeze
+    self.sort_key
     
-    self.class.sort_key(self) <=> self.class.sort_key(other)
+    freeze
   end
   
-  def hash
-    object.hash
-  end
-  
-  def type
-    object.type
+  def <=>(other)
+    return nil unless other.kind_of?(self.class)
+    return 0   if self.name == other.name
+    
+    self.sort_key <=> other.sort_key
   end
   
   def mode
@@ -321,20 +307,19 @@ class Git::Object::Tree::Entry
          @object="..."> }.strip.gsub(%r{\s+}, ' ')
   end
   
-  private
+  protected
   
-  attr_writer :name
+  attr_writer :type
   attr_writer :perms
   attr_writer :object
   
-  #
-  # Retrieves the sort key for an entry. The sort key is the binary
-  # representation of the name, with TREE_SUFFIX appended if the entry is a
-  # tree.
-  #
-  def self.sort_key(entry)
-    name  = entry.name.dup
-    name << TREE_SUFFIX if entry.type == :tree
-    name.unpack('C*')
+  def name=(value)
+    # strip off trailing slashes for conformity
+    value = value.chop if value[-1, 1] == '/'
+    @name = value
+  end
+  
+  def sort_key
+    @sort_key ||= name + (type == :tree ? TREE_SUFFIX : '')
   end
 end

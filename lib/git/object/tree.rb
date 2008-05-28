@@ -100,7 +100,7 @@ class Git::Object::Tree < Git::Object
   
   def _load(dump)
     fields = dump.split(INPUT_FORMAT)
-    fields.enum_slice(4).each do |dummy, mode, name, hash|
+    fields.each_slice(4) do |dummy, mode, name, hash|
       mode  = mode.to_i(8)
       type  = self.class.type(mode)
       perms = self.class.permissions(mode)

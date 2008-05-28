@@ -6,12 +6,10 @@ module Proxyable
     base.extend(ClassMethods)
   end
   
-  protected
-  
   module ClassMethods
-    protected
-    
     attr_accessor :proxied_attributes
+    
+    protected
     
     def attr_proxied(*attrs)
       self.proxied_attributes ||= []
@@ -20,6 +18,8 @@ module Proxyable
       attr_accessor(*attrs)
     end
   end
+  
+  protected
   
   def proxy!(dump, &loader)
     metaclass = class << self; self; end

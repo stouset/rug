@@ -49,7 +49,7 @@ class Git::Object
   
   def self.find(hash)
     if store = Git::Store.find(hash)
-      object = store.object
+      object = load(store.type, store.dump)
       verify_object_type(object)
       object
     end

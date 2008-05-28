@@ -143,18 +143,6 @@ class Git::Store::LooseObject
     dump.length
   end
   
-  #
-  # The Git::Object represented in the loose object. Is lazily constructed
-  # only once this method is called. Validation is called to ensure the hash
-  # of the object matches the one on disk.
-  #
-  # NOTE: Repeated use of this method may be slow, since each call forces it
-  # to re-instantiate a new Git::Object.
-  #
-  def object
-    Git::Object.load(type, dump)
-  end
-  
   private
   
   #

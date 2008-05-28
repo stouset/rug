@@ -65,9 +65,16 @@ class Git::Object::Tree < Git::Object
   end
   
   def each(&block)
+    entries.each(&block)
+  end
+  
+  def descend(path = '.', &block)
+    path = path.to_path
+    
     entries.each do |entry|
-      block.call(entry)
-      entry.object.each(&block) if entry.object.kind_of?(self.class)
+      p = path.join(entry.name)
+      yield(p, entry)
+      entry.object.descend(p, &block) if entry.type == :tree
     end
   end
   
@@ -78,6 +85,10 @@ class Git::Object::Tree < Git::Object
     dirname, basename = path.split
     
     # TODO: finish
+  end
+  
+  def objects
+    entries.map {|e| e.object }
   end
   
   def to_s

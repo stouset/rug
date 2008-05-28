@@ -18,23 +18,23 @@ require 'digest/sha1'
 #   left to the subclass to define) and instantiate (but not save) an object
 #   of that type.
 #
+# [<tt>Klass#objects (optional)</tt>]
+#   If the Object subclass points to other git objects (e.g., trees or
+#   commits), it must define this method to return the list of all such
+#   objects. Only one level of depth is necessary.
+# 
 # [<tt>Klass#to_s</tt>]
 #   Must represent the contents in a string-like fashion. Must be directly
-#   compatible wih the output of git-show for that type of object.
-#
+#   compatible wih the output of 'git-cat-file -p' for that type of object.
+# 
 # [<tt>Klass#dump (private)</tt>]
 #   Must return a string containing the raw dumped contents of the object,
 #   compatible with git's standard format for that object.
-#   
+# 
 # [<tt>Klass#load(dump) (private)</tt>]
 #   Must accept any string returned by _#dump_, and set the state of the
 #   object to whatever it's state was at the time of the dump. May assume that
 #   the object has not been modified since instantiation.
-#
-# [<tt>Klass#children (optional)</tt>]
-#   If the Object subclass points to other git objects (e.g., trees or
-#   commits), it must define this method to return the list of all such
-#   objects.
 #
 class Git::Object
   CANONICAL_FORMAT = "%s %d\0%s"
@@ -70,6 +70,14 @@ class Git::Object
   def self.hash(type, dump)
     Digest::SHA1.hexdigest(canonical(type, dump))
   end
+  
+  def eql?(other)
+    # due to our use of SHA-1, this _should_ fail in a reasonable and expected
+    # manner when the other object isn't a Git object
+    self.hash == other.hash
+  end
+  
+  alias == eql?
   
   def save
     Git::Store.create(self.hash, self.type, self.dump).hash

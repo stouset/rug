@@ -301,6 +301,10 @@ class Git::Object::Tree::Entry
     self.class.sort_key(self) <=> self.class.sort_key(other)
   end
   
+  def hash
+    object.hash
+  end
+  
   def type
     object.type
   end
@@ -341,6 +345,7 @@ class Git::Object::Tree::Entry
   def proxy_object!(type, hash)
     metaclass = class << self; self; end
     metaclass.send(:alias_method, :proxy_object, :object)
+    metaclass.send(:alias_method, :proxy_hash,   :hash)
     metaclass.send(:alias_method, :proxy_type,   :type)
     
     metaclass.send(:define_method, :object) do
@@ -348,6 +353,7 @@ class Git::Object::Tree::Entry
       self.object = Git::Object.klass(type).find(hash)
     end
     
+    metaclass.send(:define_method, :hash) { hash }
     metaclass.send(:define_method, :type) { type }
   end
   
@@ -358,6 +364,7 @@ class Git::Object::Tree::Entry
   def unproxy_object!
     class << self
       alias_method :object, :proxy_object
+      alias_method :hash,   :proxy_hash
       alias_method :type,   :proxy_type
     end
   end

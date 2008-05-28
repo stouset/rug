@@ -286,8 +286,6 @@ class Git::Object::Tree::Entry
   attr_reader :perms
   attr_reader :object
   
-  attr_reader :sort_key
-  
   def initialize(name, type, perms, object)
     self.name   = name
     self.type   = type

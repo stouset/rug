@@ -11,7 +11,7 @@ module Proxyable
   module ClassMethods
     protected
     
-    def attr_proxy(*attrs)
+    def attr_proxied(*attrs)
       self.proxied_attributes ||= []
       self.proxied_attributes.push(*attrs)
       

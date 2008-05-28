@@ -1,7 +1,7 @@
 module Proxyable
   private
   
-  def included(base)
+  def self.included(base)
     super
     base.extend(ClassMethods)
   end
@@ -10,6 +10,8 @@ module Proxyable
   
   module ClassMethods
     protected
+    
+    attr_accessor :proxied_attributes
     
     def attr_proxied(*attrs)
       self.proxied_attributes ||= []
@@ -21,27 +23,25 @@ module Proxyable
   
   def proxy!(dump, &loader)
     metaclass = class << self; self; end
-    metaclass.send(:alias_method,  :proxied_dump, :dump)
-    metaclass.send(:define_method, :proxied_dump) { dump }
     metaclass.send(:define_method, :proxied_load, &loader)
+    metaclass.send(:alias_method,  :proxied_dump, :_dump)
+    metaclass.send(:define_method, :_dump) { dump }
     
     self.class.proxied_attributes.each do |a|
       metaclass.send(:alias_method,  :"proxied_#{a}",  :"#{a}")
       metaclass.send(:alias_method,  :"proxied_#{a}=", :"#{a}=")
-      metaclass.send(:define_method, :"#{a}") { unproxy!; a }
+      metaclass.send(:define_method, :"#{a}") { unproxy!; self.send(a) }
       metaclass.send(:define_method, :"#{a}=") do |v|
         # only need to perform a load if we're not overwriting the thing
         unproxy!(self.class.proxied_attributes.length > 1)
         self.send(:"#{a}=", v)
+      end
     end
   end
   
   def unproxy!(load = true)
-    # we'll need this for the load later
-    dump = self.dump
-    
     metaclass = class << self; self; end
-    metaclass.send(:alias_method, :dump, :proxied_dump)
+    metaclass.send(:alias_method, :_dump, :proxied_dump)
     
     self.class.proxied_attributes.each do |a|
       metaclass.send(:alias_method, :"#{a}",  :"proxied_#{a}")
@@ -49,6 +49,6 @@ module Proxyable
     end
       
     # perform the actual load
-    proxied_load(dump) if load
+    proxied_load if load
   end
 end

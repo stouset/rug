@@ -1,7 +1,10 @@
+require 'git/proxyable'
+
 require 'enumerator'
 
 class Git::Object::Tree < Git::Object
   include Enumerable
+  include Proxyable
   
   INPUT_FORMAT  = /(\d+) (\w+)\0(.{20})/m
   OUTPUT_FORMAT = "%o %s\0%s"
@@ -18,7 +21,7 @@ class Git::Object::Tree < Git::Object
   
   TYPE_FOR = MODE_FOR.invert
   
-  attr_accessor :entries
+  attr_proxied :entries
   
   #
   # Creates a new instance of a Tree. Calls +#<<+ on all paths passed.
@@ -99,14 +102,17 @@ class Git::Object::Tree < Git::Object
   end
   
   def _load(dump)
-    fields = dump.split(INPUT_FORMAT)
-    fields.each_slice(4) do |dummy, mode, name, hash|
-      mode  = mode.to_i(8)
-      type  = self.class.type(mode)
-      perms = self.class.permissions(mode)
-      hash  = hash.unpack('H40').first
-      
-      entries << Git::Object::Tree::Entry.proxy(name, perms, type, hash)
+    proxy!(dump) do
+      fields = dump.split(INPUT_FORMAT)
+      fields.each_slice(4) do |dummy, mode, name, hash|
+        mode  = mode.to_i(8)
+        type  = self.class.type(mode)
+        perms = self.class.permissions(mode)
+        hash  = hash.unpack('H40').first
+        
+        object   = Git::Object.klass(type).find(hash)
+        entries << Git::Object::Tree::Entry.new(name, perms, object)
+      end
     end
   end
   
@@ -267,12 +273,6 @@ class Git::Object::Tree::Entry
   attr_reader :perms
   attr_reader :object
   
-  def self.proxy(name, perms, type, hash)
-    proxy = self.new(name, perms, nil)
-    proxy.send(:proxy_object!, type, hash)
-    proxy
-  end
-  
   #
   # Creates a new tree entry with the given name, perms, and wrapped object.
   # Normalizes the name to not contain a trailing slash.
@@ -335,37 +335,5 @@ class Git::Object::Tree::Entry
     name  = entry.name.dup
     name << TREE_SUFFIX if entry.type == :tree
     name.unpack('C*')
-  end
-  
-  #
-  # Rewrites any methods that would potentially access disk or cause deep
-  # recursion to lazily fetch the data needed for them, to avoid pulling the
-  # entire contents of the repository any time a small piece is loaded.
-  #
-  def proxy_object!(type, hash)
-    metaclass = class << self; self; end
-    metaclass.send(:alias_method, :proxy_object, :object)
-    metaclass.send(:alias_method, :proxy_hash,   :hash)
-    metaclass.send(:alias_method, :proxy_type,   :type)
-    
-    metaclass.send(:define_method, :object) do
-      unproxy_object!
-      self.object = Git::Object.klass(type).find(hash)
-    end
-    
-    metaclass.send(:define_method, :hash) { hash }
-    metaclass.send(:define_method, :type) { type }
-  end
-  
-  #
-  # Replaces the proxied methods with their normal, unproxied versions. Called
-  # automatically when objects are fetched lazily.
-  #
-  def unproxy_object!
-    class << self
-      alias_method :object, :proxy_object
-      alias_method :hash,   :proxy_hash
-      alias_method :type,   :proxy_type
-    end
   end
 end

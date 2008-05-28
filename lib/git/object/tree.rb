@@ -278,9 +278,11 @@ class Git::Object::Tree::Entry
   # Normalizes the name to not contain a trailing slash.
   #
   def initialize(name, perms, object)
-    self.name   = self.class.normalized_name(name)
+    self.name   = name.dup
     self.perms  = perms
     self.object = object
+    
+    self.name.chop! if self.name[-1, 1] == '/'
   end
   
   #
@@ -319,13 +321,6 @@ class Git::Object::Tree::Entry
   attr_writer :name
   attr_writer :perms
   attr_writer :object
-  
-  #
-  # Removes a trailing slash from a name, if one exists.
-  #
-  def self.normalized_name(name)
-    name.sub(%r{/$}, '')
-  end
   
   #
   # Retrieves the sort key for an entry. The sort key is the binary

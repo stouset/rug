@@ -31,6 +31,11 @@ require 'digest/sha1'
 #   object to whatever it's state was at the time of the dump. May assume that
 #   the object has not been modified since instantiation.
 #
+# [<tt>Klass#children (optional)</tt>]
+#   If the Object subclass points to other git objects (e.g., trees or
+#   commits), it must define this method to return the list of all such
+#   objects.
+#
 class Git::Object
   CANONICAL_FORMAT = "%s %d\0%s"
   

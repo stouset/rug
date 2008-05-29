@@ -23,13 +23,20 @@ require 'zlib'
 # format are enumerated in VALID_OBJECTS.
 #
 class Git::Store::LooseObject
-  PERMS         = 0444      # default permissions on loose objects
-  SUBDIR_LENGTH = 2         # length of the subdirectory names
+  # default permissions on loose objects
+  PERMS         = 0444
   
-  INPUT_FORMAT  = /^(\w+) (\d+)\0/  # regexp to match canonical input
-  OUTPUT_FORMAT = "%s %d\0%s"       # sprintf-compatible output format
+  # length of the subdirectory names
+  SUBDIR_LENGTH = 2
   
-  VALID_OBJECTS = %w{ blob commit tree tag } # valid types for a loose object
+  # regexp to match loose object format
+  INPUT_FORMAT  = /^(\w+) (\d+)\0/
+  
+  # sprintf-compatible output format
+  OUTPUT_FORMAT = "%s %d\0%s"
+  
+  # valid types for a loose object
+  VALID_OBJECTS = [ :blob, :commit, :tree, :tag ]
   
   attr_accessor :hash
   attr_accessor :type
@@ -55,7 +62,7 @@ class Git::Store::LooseObject
     match = read(hash).match(INPUT_FORMAT)
     
     # extract the header and contents of the file
-    type   = match[1]
+    type   = match[1].to_sym
     length = match[2].to_i
     dump   = match.post_match
     

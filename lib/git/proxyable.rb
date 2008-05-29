@@ -29,6 +29,11 @@ module Proxyable
     metaclass.send(:alias_method,  :proxied_dump, :_dump)
     metaclass.send(:define_method, :_dump) { dump }
     
+    metaclass.send(:alias_method,  :proxied_inspect, :inspect)
+    metaclass.send(:define_method, :inspect) do
+      %{ #<#{self.class.name}:#{self.object_id.to_s(16)} (proxied)> }
+    end
+    
     self.class.proxied_attributes.each do |a|
       metaclass.send(:alias_method,  "proxied_#{a}".to_sym,  "#{a}".to_sym)
       metaclass.send(:alias_method,  "proxied_#{a}=".to_sym, "#{a}=".to_sym)
@@ -44,6 +49,7 @@ module Proxyable
   def unproxy!(load = true)
     metaclass = class << self; self; end
     metaclass.send(:alias_method, :_dump, :proxied_dump)
+    metaclass.send(:alias_method, :inspect, :proxied_inspect)
     
     self.class.proxied_attributes.each do |a|
       metaclass.send(:alias_method, "#{a}".to_sym,  "proxied_#{a}".to_sym)

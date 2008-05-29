@@ -31,7 +31,7 @@ module Proxyable
     
     metaclass.send(:alias_method,  :proxied_inspect, :inspect)
     metaclass.send(:define_method, :inspect) do
-      %{ #<#{self.class.name}:#{self.object_id.to_s(16)} (proxied)> }
+      "#<#{self.class.name}:#{self.object_id.to_s(16)} (proxied)>"
     end
     
     self.class.proxied_attributes.each do |a|

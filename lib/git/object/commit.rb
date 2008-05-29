@@ -73,13 +73,14 @@ class Git::Object::Commit < Git::Object
       fields = dump.split(INPUT_FORMAT)
       fields.shift
       
-      parents = fields.length - 10 # 1 tree, 4 author, 4 commit, 1 message
+      count = fields.length - 10 # number of parents
       
       self.tree    = Git::Object::Tree.find(fields.shift)
-      self.parents = (1..parents).map { Git::Object::Commit.find(fields.shift) }
+      self.parents = (1..count).map { Git::Object::Commit.find(fields.shift) }
       
       self.author       = Git::Author.new(fields.shift, fields.shift)
       self.authored_at  = parse_timestamp(fields.shift, fields.shift)
+      
       self.committer    = Git::Author.new(fields.shift, fields.shift)
       self.committed_at = parse_timestamp(fields.shift, fields.shift)
       

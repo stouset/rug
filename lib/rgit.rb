@@ -21,6 +21,10 @@ class Rgit
   end
   
   def settings
+    @settings ||= defaults
+  end
+  
+  def defaults
     OpenStruct.new
   end
 end

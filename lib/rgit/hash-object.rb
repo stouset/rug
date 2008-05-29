@@ -21,8 +21,8 @@ class Rgit::HashObject < Rgit
     end
   end
   
-  def settings
-    @settings ||= OpenStruct.new(
+  def defaults
+    OpenStruct.new(
       :type  => 'blob',
       :stdin => false
     )

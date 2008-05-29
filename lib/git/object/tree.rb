@@ -87,8 +87,8 @@ class Git::Object::Tree < Git::Object
     # TODO: finish
   end
   
-  def objects
-    entries.map {|e| e.object }
+  def children
+    @entries.map {|e| e.object }
   end
   
   def to_s

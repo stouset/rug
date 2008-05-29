@@ -18,10 +18,12 @@ require 'digest/sha1'
 #   left to the subclass to define) and instantiate (but not save) an object
 #   of that type.
 #
-# [<tt>Klass#objects (optional)</tt>]
+# [<tt>Klass#children (optional)</tt>]
 #   If the Object subclass points to other git objects (e.g., trees or
 #   commits), it must define this method to return the list of all such
-#   objects. Only one level of depth is necessary.
+#   objects, for the purpose of saving them. Must only return one level of
+#   depth. Objects which are proxied (and therefore unchanged) may be
+#   excluded.
 #
 # [<tt>Klass#inspect</tt> (optional)]
 #   If the Object subclass points to other git objects, the inspect method

@@ -28,13 +28,13 @@ module Proxyable
     metaclass.send(:define_method, :_dump) { dump }
     
     self.class.proxied_attributes.each do |a|
-      metaclass.send(:alias_method,  :"proxied_#{a}",  :"#{a}")
-      metaclass.send(:alias_method,  :"proxied_#{a}=", :"#{a}=")
-      metaclass.send(:define_method, :"#{a}") { unproxy!; self.send(a) }
-      metaclass.send(:define_method, :"#{a}=") do |v|
+      metaclass.send(:alias_method,  "proxied_#{a}".to_sym,  "#{a}".to_sym)
+      metaclass.send(:alias_method,  "proxied_#{a}=".to_sym, "#{a}=".to_sym)
+      metaclass.send(:define_method, "#{a}".to_sym) { unproxy!; self.send(a) }
+      metaclass.send(:define_method, "#{a}=".to_sym) do |v|
         # only need to perform a load if we're not overwriting the thing
         unproxy!(self.class.proxied_attributes.length > 1)
-        self.send(:"#{a}=", v)
+        self.send("#{a}=".to_sym, v)
       end
     end
   end
@@ -44,8 +44,8 @@ module Proxyable
     metaclass.send(:alias_method, :_dump, :proxied_dump)
     
     self.class.proxied_attributes.each do |a|
-      metaclass.send(:alias_method, :"#{a}",  :"proxied_#{a}")
-      metaclass.send(:alias_method, :"#{a}=", :"proxied_#{a}=")
+      metaclass.send(:alias_method, "#{a}".to_sym,  "proxied_#{a}".to_sym)
+      metaclass.send(:alias_method, "#{a}=".to_sym, "proxied_#{a}=".to_sym)
     end
       
     # perform the actual load

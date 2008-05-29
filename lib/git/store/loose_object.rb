@@ -94,7 +94,7 @@ class Git::Store::LooseObject
   #
   def initialize(hash, type, dump)
     self.hash = hash
-    self.type = type
+    self.type = type.to_sym
     self.dump = dump
   end
   

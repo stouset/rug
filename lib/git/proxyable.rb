@@ -1,3 +1,5 @@
+require 'set'
+
 module Proxyable
   private
   
@@ -12,8 +14,8 @@ module Proxyable
     protected
     
     def attr_proxied(*attrs)
-      self.proxied_attributes ||= []
-      self.proxied_attributes.push(*attrs)
+      self.proxied_attributes ||= Set.new
+      self.proxied_attributes  |= attrs
       
       attr_accessor(*attrs)
     end

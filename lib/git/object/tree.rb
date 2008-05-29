@@ -102,6 +102,11 @@ class Git::Object::Tree < Git::Object
     end.join("\n") << "\n"
   end
   
+  def inspect
+    %{ #<#{self.class.name}:#{self.object_id.to_s(16)}
+         @entries="..."> }.strip.gsub(%r{\s+}, ' ')
+  end
+  
   private
   
   def _dump
@@ -307,13 +312,6 @@ class Git::Object::Tree::Entry
   
   def mode
     Git::Object::Tree::MODE_FOR[type] | perms
-  end
-  
-  def inspect
-    %{ #<#{self.class.name}:#{self.object_id.to_s(16)}
-         @name="#{name}"
-         @mode="#{mode.to_s(8)}"
-         @object="..."> }.strip.gsub(%r{\s+}, ' ')
   end
   
   protected

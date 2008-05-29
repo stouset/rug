@@ -1,5 +1,3 @@
-require 'git/proxyable'
-
 require 'enumerator'
 
 class Git::Object::Tree < Git::Object

@@ -1,3 +1,5 @@
+require 'git/proxyable'
+
 require 'digest/sha1'
 
 #

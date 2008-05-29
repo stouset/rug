@@ -18,29 +18,30 @@ require 'digest/sha1'
 #   left to the subclass to define) and instantiate (but not save) an object
 #   of that type.
 #
-# [<tt>Klass#children (optional)</tt>]
-#   If the Object subclass points to other git objects (e.g., trees or
+# [<tt>Klass#children</tt> (optional)]
+#   If the subclass points to other git objects (as in the case of trees or
 #   commits), it must define this method to return the list of all such
-#   objects, for the purpose of saving them. Must only return one level of
-#   depth. Objects which are proxied (and therefore unchanged) may be
-#   excluded.
+#   objects for the purpose of saving them. Must only return one level of
+#   depth. Objects which are proxied (and therefore unchanged) should be
+#   excluded from this list.
 #
 # [<tt>Klass#inspect</tt> (optional)]
-#   If the Object subclass points to other git objects, the inspect method
-#   should not display children, to sanely deal with deeply-nested objects.
+#   If the subclass points to other git objects, the inspect method should not
+#   display children, to sanely deal with deeply-nested objects at the
+#   console.
 # 
 # [<tt>Klass#to_s</tt>]
 #   Must represent the contents in a string-like fashion. Must be directly
 #   compatible wih the output of 'git-cat-file -p' for that type of object.
 # 
-# [<tt>Klass#dump (private)</tt>]
+# [<tt>Klass#_dump</tt> (private)]
 #   Must return a string containing the raw dumped contents of the object,
 #   compatible with git's standard format for that object.
 # 
-# [<tt>Klass#load(dump) (private)</tt>]
-#   Must accept any string returned by _#dump_, and set the state of the
-#   object to whatever it's state was at the time of the dump. May assume that
-#   the object has not been modified since instantiation.
+# [<tt>Klass#_load(dump)</tt> (private)]
+#   Must accept any string returned by +_dump+, and set the state of itself
+#   to its state at the time of the dump. May assume it was initialized with
+#   no arguments, and has not since been modified.
 #
 class Git::Object
   CANONICAL_FORMAT = "%s %d\0%s"

@@ -130,4 +130,5 @@ class Git::Object
 end
 
 require 'git/object/blob'
+require 'git/object/commit'
 require 'git/object/tree'

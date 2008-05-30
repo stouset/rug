@@ -21,7 +21,11 @@ require 'rgit'
 #
 class Rgit::HashObject < Rgit
   def main(*files)
-    streams = settings.stdin ? [STDIN] : files.map {|f| Pathname.new(f) }
+    # use stdin exclusively if set, otherwise use the named files
+    streams = case settings.stdin
+      when true then [STDIN]
+      else           files.map {|f| Pathname.new(f) }
+    end
     
     streams.each do |stream|
       type = settings.type.to_sym
@@ -41,7 +45,11 @@ class Rgit::HashObject < Rgit
   def parser
     OptionParser.new do |opts|
       opts.banner = "Usage: rgit-hash-object [options] FILES..."
-      opts.on('-t', '--type TYPE', Git::Object.types, "the contents' object type") {|settings.type|}
+      
+      opts.on('-t', '--type TYPE',
+        Git::Object.types,
+        "the object type (default blob)") {|settings.type|}
+        
       opts.on('-w', '--write') {|settings.write|}
       opts.on('-s', '--stdin') {|settings.stdin|}
     end

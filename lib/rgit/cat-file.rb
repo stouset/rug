@@ -12,11 +12,11 @@ class Rgit::CatFile < Rgit
     # need to exit 1 if the object couldn't be found
     object = Git::Object.find(id) rescue exit(1)
     
-    case mode
-      when :type   then puts object.type
-      when :size   then puts object.dump.length
-      when :exists then nil
-      when :print  then puts object
+    puts case mode
+      when :type   then object.type
+      when :size   then object.dump.length
+      when :exists then exit(0) # do this explicitly
+      when :print  then object
     end
   end
   

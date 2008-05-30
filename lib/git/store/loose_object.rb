@@ -202,7 +202,7 @@ class Git::Store::LooseObject
   #
   def self.verify_length(hash, length, dump)
     if length != dump.length
-      raise Git::CorruptLooseObject, "contents of #{hash} had the wrong length"
+      raise Git::CorruptLooseObject, "contents of #{hash} have bad length"
     end
   end
   
@@ -212,7 +212,7 @@ class Git::Store::LooseObject
   #
   def self.verify_hash(hash, type, dump)
     if hash != Git::Object.hash(type, dump)
-      raise Git::CorruptLooseObject, "contents of #{hash} did not match hash"
+      raise Git::CorruptLooseObject, "contents of #{hash} do not match hash"
     end
   end
 end

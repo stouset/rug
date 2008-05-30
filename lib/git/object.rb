@@ -48,6 +48,16 @@ require 'digest/sha1'
 class Git::Object
   CANONICAL_FORMAT = "%s %d\0%s"
   
+  def self.types
+    @types ||= []
+  end
+  
+  def self.inherited(subclass)
+    # todo: make this not duplicated
+    types << subclass.name.downcase.sub!(/^.*::/, '').to_sym
+    types.sort_by {|type| type.to_s }
+  end
+  
   def self.klass(type)
     const_get(type.to_s.capitalize)
   end

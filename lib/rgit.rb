@@ -10,12 +10,12 @@ class Rgit
   include Singleton
   
   def self.run!(args = ARGV)
-    self.instance.run!(args)
+    self.instance.run!(args.dup)
   end
   
   def run!(args)
-    rest = parser.parse(args)
-    main(*rest)
+    parser.parse!(args)
+    main(*args)
   rescue OptionParser::ParseError
     puts parser
   end

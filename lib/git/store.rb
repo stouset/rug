@@ -4,7 +4,9 @@ module Git::Store
   end
   
   def self.find(hash)
-    Git::Store::LooseObject.find(hash)
+    begin
+      Git::Store::LooseObject.find(hash)
+    end or raise Git::ObjectNotFound
   end
   
   def self.exists?(hash)

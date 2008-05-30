@@ -2,7 +2,7 @@ require 'date'
 require 'time'
 
 class Git::Object::Commit < Git::Object
-  include Proxyable
+  include Git::Proxyable
     
   SAFE_STRING_BOUNDARY = %r{[^\ .,:;<>"']}
   SAFE_STRING_CONTENTS = %r{[^\000\012<>]}

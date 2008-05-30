@@ -1,8 +1,8 @@
 require 'enumerator'
 
 class Git::Object::Tree < Git::Object
+  include Git::Proxyable
   include Enumerable
-  include Proxyable
   
   INPUT_FORMAT  = /(\d+) ([^\0]+)\0(.{20})/m
   OUTPUT_FORMAT = "%o %s\0%s"

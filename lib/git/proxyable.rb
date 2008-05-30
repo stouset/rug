@@ -1,6 +1,24 @@
-require 'set'
-
-module Proxyable
+#
+# Inclusion of this module implies that an object can have its instantiation
+# delayed until proxied attributes are called. This is important to prevent an
+# avalanche effect, where loading one object causes all its children to load,
+# recusively.
+#
+# To defer loading an object, include Git::Proxyable, then wrap the
+# <tt>_load</tt> method in a <tt>proxy!</tt> block.
+#
+#   def _load(dump)
+#     proxy!(dump) do
+#       # loading code
+#       ...
+#     end
+#   end
+#
+# This will cause your Object to defer parsing its dump file until any method
+# defined with +attr_proxied+ is called, at which point the block will run and
+# the Object will become fully loaded.
+#
+module Git::Proxyable
   private
   
   def self.included(base)
@@ -13,8 +31,11 @@ module Proxyable
     
     protected
     
+    #
+    # Declare a proxyable attribute.
+    #
     def attr_proxied(*attrs)
-      self.proxied_attributes ||= Set.new
+      self.proxied_attributes ||= []
       self.proxied_attributes  |= attrs
       
       attr_accessor(*attrs)
@@ -23,6 +44,11 @@ module Proxyable
   
   protected
   
+  #
+  # Call this method to proxy all +proxied_attributes+. Takes the +dump+ of
+  # the object's contents to load later, and a block that performs the actual
+  # deferred load.
+  #
   def proxy!(dump, &loader)
     metaclass = class << self; self; end
     metaclass.send(:define_method, :proxied_load, &loader)
@@ -46,6 +72,11 @@ module Proxyable
     end
   end
   
+  private
+  
+  #
+  # Forces the Object to finish loading, and unproxies all proxied attributes.
+  #
   def unproxy!(load = true)
     metaclass = class << self; self; end
     metaclass.send(:alias_method, :_dump, :proxied_dump)

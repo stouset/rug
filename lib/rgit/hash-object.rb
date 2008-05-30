@@ -21,18 +21,21 @@ class Rgit::HashObject < Rgit
     end
   end
   
-  private
+  protected
   
   def parser
     OptionParser.new do |opts|
-      opts.banner = "Usage: rgit-hash-object [options] FILES..."
+      opts.banner = "Usage: rgit-hash-object [options] FILE..."
       
       opts.on('-t', '--type TYPE',
         Git::Object.types,
-        "the object type (default blob)") {|settings.type|}
+        'the object type (default blob)') {|settings.type|}
         
-      opts.on('-w', '--write') {|settings.write|}
-      opts.on('-s', '--stdin') {|settings.stdin|}
+      opts.on('-w', '--write',
+        'write the object(s) to the database') {|settings.write|}
+        
+      opts.on('-s', '--stdin',
+        'read from standard input') {|settings.stdin|}
     end
   end
   

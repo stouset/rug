@@ -1,0 +1,5 @@
+#!/usr/bin/ruby -w
+
+require 'rgit/cat-file'
+
+Rgit::CatFile.run!

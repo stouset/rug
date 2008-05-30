@@ -1,40 +1,5 @@
 require 'rgit'
 
-#
-# = Name
-#
-# rgit-hash-object - Compute the object id from a file.
-#
-# = Synopsis
-#
-# :usage:
-#
-# = Description
-#
-# Computes the object id for an object with specified type (defaults to blob)
-# from the contents of the named file, optionally writing it to the object
-# database.
-#
-# Reports the object id to standard out.
-#
-# = Options
-#
-# [<tt>-t, --type <type></tt>] specify the type (default: "blob")
-# [<tt>-w, --write</tt>]       write the object to the object database
-# [<tt>-s, --stdin</tt>]       read the object from stdin instead of a file
-#
-# = Author
-#
-# Written by Stephen Touset <stephen@touset.org>.
-#
-# = Documentation
-#
-# Documentation by Stephen Touset <stephen@touset.org>.
-#
-# = rgit
-#
-# Part of the rgit(1) suite.
-#
 class Rgit::HashObject < Rgit
   def main(*files)
     # use stdin exclusively if set, otherwise use the named files

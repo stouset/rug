@@ -1,6 +1,49 @@
 #!/usr/bin/ruby -w
+#
+# :title: rgit-hash-object(1)
+#
+# = rgit-hash-object(1)
+#
+# == Name
+#
+# rgit-hash-object - Compute the object id from a file.
+#
+# == Synopsis
+#
+# <tt>rgit-hash-object [options] FILES...</tt>
+#
+# == Description
+#
+# Computes the object id for an object with specified type (defaults to blob)
+# from the contents of the named file, optionally writing it to the object
+# database.
+#
+# Reports the object id to standard out.
+#
+# == Options
+#
+# [<tt>-t, --type <type></tt>]
+#   specify the type (default: "blob")
+#
+# [<tt>-w, --write</tt>]
+#   write the object to the object database
+#
+# [<tt>-s, --stdin</tt>]
+#   read the object from stdin instead of a file
+#
+# == Author
+#
+# Written by Stephen Touset <stephen@touset.org>.
+#
+# == Documentation
+#
+# Documented by Stephen Touset <stephen@touset.org>.
+#
+# == rgit
+#
+# Part of the rgit(1) suite.
+#
 
-require 'rubygems'
 require 'rgit/hash-object'
 
 Rgit::HashObject.run!

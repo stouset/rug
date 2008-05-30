@@ -2,14 +2,10 @@
 # Attempt to load pathname3 by default. If it doesn't exist, use pathname
 # instead.
 #--
-# TODO: test with pathname
+# TODO: get working with original pathname
 #
-begin
-  require 'rubygems'
-  require 'pathname3'
-rescue LoadError
-  require 'pathname'
-end
+
+require 'pathname3'
 
 class Pathname
   #

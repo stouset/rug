@@ -1,12 +1,37 @@
 require 'rgit'
 
+#
+# = Name
+#
+# rgit-hash-object - Compute the object id from a file.
+#
+# = Synopsis
+#
+# :usage:
+#
+# = Description
+#
+# Computes the object id for an object with specified type (defaults to blob)
+# from the contents of the named file, optionally writing it to the object
+# database.
+#
+# Reports the object id to standard out.
+#
+# = Options
+#
 class Rgit::HashObject < Rgit
   def main(*files)
-    if settings.stdin
-      puts Git::Object.hash(settings.type, STDIN.read)
-    else
-      files.each do |name|
-        puts Git::Object.hash(settings.type, File.read(name))
+    streams = settings.stdin ? [STDIN] : files.map {|f| Pathname.new(f) }
+    
+    streams.each do |stream|
+      type = settings.type.to_sym
+      dump = stream.read
+      hash = Git::Object.hash(settings.type, dump)
+      
+      puts hash
+      
+      if settings.write
+        Git::Store.create(hash, type, dump)
       end
     end
   end
@@ -16,7 +41,8 @@ class Rgit::HashObject < Rgit
   def parser
     OptionParser.new do |opts|
       opts.banner = "Usage: rgit-hash-object [options] FILES..."
-      opts.on('-t', '--type TYPE', [:blob, :tree, :commit], 'a git object type') {|settings.type|}
+      opts.on('-t', '--type TYPE', Git::Object.types, "the contents' object type") {|settings.type|}
+      opts.on('-w', '--write') {|settings.write|}
       opts.on('-s', '--stdin') {|settings.stdin|}
     end
   end
@@ -24,6 +50,7 @@ class Rgit::HashObject < Rgit
   def defaults
     OpenStruct.new(
       :type  => 'blob',
+      :write => false,
       :stdin => false
     )
   end

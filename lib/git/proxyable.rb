@@ -104,12 +104,16 @@ module Git::Proxyable
   #
   def unproxy!(load = true)
     metaclass = class << self; self; end
-    metaclass.send(:alias_method, :_dump, :proxied_dump)
-    metaclass.send(:alias_method, :inspect, :proxied_inspect)
+    metaclass.send(:remove_method, :_dump)
+    metaclass.send(:remove_method, :inspect)
+    metaclass.send(:alias_method,  :_dump,   :proxied_dump)
+    metaclass.send(:alias_method,  :inspect, :proxied_inspect)
     
     self.class.proxied_attributes.each do |a|
-      metaclass.send(:alias_method, "#{a}".to_sym,  "proxied_#{a}".to_sym)
-      metaclass.send(:alias_method, "#{a}=".to_sym, "proxied_#{a}=".to_sym)
+      metaclass.send(:remove_method, "#{a}".to_sym)
+      metaclass.send(:remove_method, "#{a}=".to_sym)
+      metaclass.send(:alias_method,  "#{a}".to_sym,  "proxied_#{a}".to_sym)
+      metaclass.send(:alias_method,  "#{a}=".to_sym, "proxied_#{a}=".to_sym)
     end
       
     # perform the actual load

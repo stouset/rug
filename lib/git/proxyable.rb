@@ -50,7 +50,7 @@ module Git::Proxyable
     # Declare a proxyable attribute.
     #
     def attr_proxied(*attrs)
-      self.proxied_attributes.push(attrs)
+      self.proxied_attributes.push(*attrs)
       self.proxied_attributes.uniq!
       attr_accessor(*attrs)
     end

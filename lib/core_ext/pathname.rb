@@ -3,8 +3,10 @@
 # instead.
 #--
 # TODO: get working with original pathname
+# TODO: avoid rubygems load if possible
 #
 
+require 'rubygems'
 require 'pathname3'
 
 class Pathname

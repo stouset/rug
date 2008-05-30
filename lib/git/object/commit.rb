@@ -36,19 +36,19 @@ class Git::Object::Commit < Git::Object
   attr_proxied :committed_at
   
   def initialize(tree = nil, message = nil, *parents)
-    self.tree      = tree
-    self.committer = Git::Author.default
-    self.author    = self.committer
-    self.parents   = parents
-    self.message   = message
-    
-    self.authored_at  ||= DateTime.now
-    self.committed_at ||= DateTime.now
+    self.tree    = tree
+    self.message = message
+    self.parents = parents
   end
   
   private
   
   def _dump
+    self.committer    ||= Git::Author.default
+    self.author       ||= self.committer
+    self.authored_at  ||= DateTime.now
+    self.committed_at ||= DateTime.now
+    
     format  = [ "tree %s" ]
     format += [ "parent %s" ] * parents.length
     format += [ "author %s <%s> %s %s"]

@@ -25,7 +25,7 @@ class Rgit::HashObject < Rgit
   
   def parser
     OptionParser.new do |opts|
-      opts.banner = "Usage: rgit-hash-object [options] FILE..."
+      opts.banner = "Usage: rgit-hash-object [options] <file>..."
       
       opts.on('-t', '--type TYPE',
         Git::Object.types,

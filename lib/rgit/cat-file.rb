@@ -27,7 +27,7 @@ class Rgit::CatFile < Rgit
     # TODO: support <type> like git-cat-file
     #
     OptionParser.new do |opts|
-      opts.banner = "Usage: rgit-cat-file [-t|-s|-e|-p] ID"
+      opts.banner = "Usage: rgit-cat-file [-t|-s|-e|-p] <id>"
       
       opts.on('-t', '--type',
         "print the object's type") \

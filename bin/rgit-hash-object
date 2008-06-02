@@ -10,7 +10,7 @@
 #
 # == Synopsis
 #
-# <tt>rgit-hash-object [options] FILES...</tt>
+# <tt>rgit-hash-object [options] <file>...</tt>
 #
 # == Description
 #

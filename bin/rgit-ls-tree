@@ -1,0 +1,5 @@
+#!/usr/bin/ruby -w
+
+require 'rgit/ls-tree'
+
+Rgit::LsTree.run!

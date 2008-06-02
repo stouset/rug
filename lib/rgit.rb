@@ -18,6 +18,8 @@ class Rgit
     main(*args)
   rescue OptionParser::ParseError
     puts parser
+  rescue Git::StandardError => e
+    puts "#{e.message} (#{e.backtrace.first})"
   end
   
   def settings

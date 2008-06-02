@@ -41,6 +41,10 @@ class Git::Object::Commit < Git::Object
     self.parents = parents
   end
   
+  def to_tree
+    tree
+  end
+  
   private
   
   def _dump

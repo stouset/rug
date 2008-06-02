@@ -114,6 +114,11 @@ class Git::Object
     self.class.hash(type, dump)
   end
   
+  def to_tree
+    raise Git::ObjectTypeError,
+      "#{type}s aren't tree-ish"
+  end
+  
   def dump
     _dump
   end

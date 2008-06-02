@@ -105,6 +105,10 @@ class Git::Object::Tree < Git::Object
          @entries="..."> }.strip.gsub(%r{\s+}, ' ')
   end
   
+  def to_tree
+    self
+  end
+  
   private
   
   def _dump

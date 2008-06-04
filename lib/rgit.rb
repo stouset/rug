@@ -18,8 +18,14 @@ class Rgit
     main(*args)
   rescue OptionParser::ParseError
     puts parser
+  rescue ArgumentError => e
+    # only catch ArgumentError from calling main with bad args
+    case e.backtrace.first
+      when %r{`main'$} then puts parser
+      else                  raise e
+    end
   rescue Git::StandardError => e
-    puts "#{e.message} (#{e.backtrace.first})"
+    puts "fatal: #{e.message} (#{e.backtrace.first})"
   end
   
   def settings

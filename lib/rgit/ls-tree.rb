@@ -1,12 +1,9 @@
 require 'rgit'
 
 class Rgit::LsTree < Rgit
-  def main(*trees)
-    # we do this to match git's behavior
-    raise OptionParser::ParseError unless trees.length >= 1
-    
-    tree  = Git::Object.find(trees.shift).to_tree
-    paths = trees
+  def main(tree, *paths)
+    tree  = Git::Object.find(tree).to_tree
+    paths.map! {|path| path.to_path }
     
     # need to work on _some_ path
     if paths.empty?
@@ -16,6 +13,8 @@ class Rgit::LsTree < Rgit
     end
   end
   
+  private
+    
   protected
   
   def parser
@@ -26,7 +25,7 @@ class Rgit::LsTree < Rgit
         'show only trees; implies -t') \
         {|settings.dir| settings.show_trees = settings.dir }
       
-      opts.on('-r', '--rescurse',
+      opts.on('-r', '--recurse',
         'recurse into sub-trees') \
         {|settings.recursive|}
       
@@ -35,12 +34,12 @@ class Rgit::LsTree < Rgit
         {|settings.show_trees|}
       
       opts.on('-l', '--long',
-        'show size of files') \
+        'also show the size of files') \
         {|settings.long|}
       
       opts.on('-z', '--null',
         'terminate lines with \0 rather than \n') \
-        {|settings.nul|}
+        { settings.terminator = "\0" }
       
       opts.on('--name-only', '--name-status',
         'list only filenames') \
@@ -62,7 +61,7 @@ class Rgit::LsTree < Rgit
       :recurse    => false,
       :show_trees => false,
       :long       => false,
-      :nul        => false,
+      :terminator => "\n",
       :name_only  => false,
       :abbrev     => 40,
       :full_paths => false

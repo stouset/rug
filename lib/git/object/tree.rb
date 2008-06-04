@@ -71,7 +71,7 @@ class Git::Object::Tree < Git::Object
     
     entries.each do |entry|
       p = path.join(entry.name)
-      yield(p, entry)
+      yield(entry, p)
       entry.object.descend(p, &block) if entry.type == :tree
     end
   end

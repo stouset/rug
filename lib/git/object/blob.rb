@@ -14,7 +14,8 @@ class Git::Object::Blob < Git::Object
   #
   # Creates a new instance of a Blob with optional raw +contents+.
   #
-  def initialize(contents = nil)
+  def initialize(store, contents = nil)
+    super(store)
     self.contents = contents
   end
   
@@ -29,17 +30,17 @@ class Git::Object::Blob < Git::Object
   private
   
   #
-  # Returns the raw contents of the blob.
-  #
-  def _dump
-    self.contents
-  end
-  
-  #
   # Loads the blob from a raw dump. Since blobs are raw text, does not need
   # to do any parsing or formatting.
   #
   def _load(dump)
     self.contents = dump
+  end
+  
+  #
+  # Returns the raw contents of the blob.
+  #
+  def _dump
+    self.contents
   end
 end

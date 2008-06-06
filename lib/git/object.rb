@@ -2,130 +2,87 @@ require 'git/proxyable'
 
 require 'digest/sha1'
 
-#
-# Wraps the concept of an object in Git. Any versioned data in Git is
-# considered an object. Current object types are:
-#
-# - blob
-# - tree
-# - commit
-# - tag
-#
-# Any subclass +Klass+ of Git::Object is expected to conform to the following
-# API:
-#
-# [<tt>Klass#initialize(*args)</tt>]
-#   Must be able to accept no arguments and instantiate a completely empty
-#   object. Otherwise, take the args passed (number, type, and purpose are
-#   left to the subclass to define) and instantiate (but not save) an object
-#   of that type.
-#
-# [<tt>Klass#children</tt> (optional)]
-#   If the subclass points to other git objects (as in the case of trees or
-#   commits), it must define this method to return the list of all such
-#   objects for the purpose of saving them. Must only return one level of
-#   depth. Objects which are proxied (and therefore unchanged) should be
-#   excluded from this list.
-#
-# [<tt>Klass#inspect</tt> (optional)]
-#   If the subclass points to other git objects, the inspect method should not
-#   display children, to sanely deal with deeply-nested objects at the
-#   console.
-# 
-# [<tt>Klass#to_s</tt>]
-#   Must represent the contents in a string-like fashion. Must be directly
-#   compatible wih the output of 'git-cat-file -p' for that type of object.
-# 
-# [<tt>Klass#_dump</tt> (private)]
-#   Must return a string containing the raw dumped contents of the object,
-#   compatible with git's standard format for that object.
-# 
-# [<tt>Klass#_load(dump)</tt> (private)]
-#   Must accept any string returned by +_dump+, and set the state of itself
-#   to its state at the time of the dump. May assume it was initialized with
-#   no arguments, and has not since been modified.
-#
 class Git::Object
   CANONICAL_FORMAT = "%s %d\0%s"
   
-  def self.types
-    @types ||= []
-  end
-  
-  def self.inherited(subclass)
-    # todo: make this not duplicated
-    types << subclass.name.downcase.sub!(/^.*::/, '').to_sym
-    types.sort_by {|type| type.to_s }
-  end
+  attr_accessor :store
   
   def self.klass(type)
     const_get(type.to_s.capitalize)
+  end
+  
+  def self.type
+    # TODO: optimize this regexp
+    name.downcase.sub!(/^.*::/, '').to_sym
   end
   
   def self.create(*args)
     new(*args).save
   end
   
-  def self.find(hash)
-    if store = Git::Store.find(hash)
-      object = load(store.type, store.dump)
-      verify_object_type(object)
-      object
-    end
+  def self.load(store, type, dump)
+    klass(type).new(store).load(dump)
   end
   
-  def self.exists?(hash)
-    Git::Store.exists?(hash)
+  def self.find(store, id)
+    type, dump = store.read(id)
+    object     = load(store, type, dump)
+    verify_object_type(object)
+    object
   end
   
-  def self.load(type, dump)
-    klass(type).new.load(dump)
+  def self.exists?(store, id)
+    store.contains?(id)
   end
   
-  def self.canonical(type, dump)
-    CANONICAL_FORMAT % [ type, dump.length, dump ]
+  def self.each(store)
+    raise NotImplementedError, "can't iterate over all #{type}s"
   end
   
   def self.hash(type, dump)
     Digest::SHA1.hexdigest(canonical(type, dump))
   end
   
-  def eql?(other)
+  def initialize(store)
+    self.store = store
+  end
+  
+  def ==(other)
     # due to our use of SHA-1, this _should_ fail in a reasonable and expected
     # manner when the other object isn't a Git object
     self.hash == other.hash
   end
   
-  alias == eql?
+  alias eql? ==
   
   def save
-    Git::Store.create(self.hash, self.type, self.dump).hash
+    store.write(hash, type, dump).hash
   end
   
   def type
-    self.class.name.downcase.sub!(/^.*::/, '').to_sym
-  end
-  
-  def canonical
-    self.class.canonical(type, dump)
+    self.class.type
   end
   
   def hash
     self.class.hash(type, dump)
   end
   
-  def to_tree
-    raise Git::ObjectTypeError,
-      "#{type}s aren't tree-ish"
+  def canonical
+    CANONICAL_FORMAT % [ type, dump.length, dump ]
+  end
+  
+  def load(dump)
+    _load(dump)
+    self
   end
   
   def dump
     _dump
   end
   
-  def load(dump)
-    _load(dump)
-    self
+  def to_tree
+    raise Git::ObjectTypeError,
+      "#{type} isn't tree-ish"
   end
   
   private
@@ -141,11 +98,11 @@ class Git::Object
   def self.verify_object_type(object)
     unless object.kind_of?(self)
       raise Git::ObjectTypeError,
-        "expected #{object.hash} to be #{self.name} but was #{object.class.name}"
+        "expected a #{self.type} but was a #{object.type}"
     end
   end
 end
 
 require 'git/object/blob'
-require 'git/object/commit'
-require 'git/object/tree'
+# require 'git/object/commit'
+# require 'git/object/tree'

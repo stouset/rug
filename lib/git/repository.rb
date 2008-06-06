@@ -18,27 +18,23 @@ class Git::Repository
   end
   
   def [](id)
-    objects.find(id)
-  end
-  
-  def find(id)
-    objects.find(id)
+    objects[id]
   end
   
   def objects
-    Git::Collection.new(Git::Object)
+    Git::Collection.new(self, Git::Object)
   end
   
   def blobs
-    Git::Collection.new(Git::Blob)
+    Git::Collection.new(self, Git::Blob)
   end
   
   def trees
-    Git::Collection.new(Git::Tree)
+    Git::Collection.new(self, Git::Tree)
   end
   
   def commits
-    Git::Collection.new(Git::Commit)
+    Git::Collection.new(self, Git::Commit)
   end
   
   #

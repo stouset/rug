@@ -5,5 +5,6 @@ module Git
   class InvalidTreeEntry   <   StandardError; end
   class ObjectNotFound     <   StandardError; end
   class ObjectTypeError    <   StandardError; end
+  class RepositoryNotFound <   StandardError; end
   class UnknownObjectError <   StandardError; end
 end

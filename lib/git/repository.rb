@@ -14,7 +14,6 @@ class Git::Repository
   #
   def initialize(dir = Dir.pwd)
     self.work_path = dir
-    self.store     = Git::Store.
   end
   
   def [](id)
@@ -59,7 +58,7 @@ class Git::Repository
   # Gets the location of the repository's git dir.
   #
   def git_path
-    work_dir.join(GIT_DIR)
+    work_path.join(GIT_DIR)
   end
   
   private

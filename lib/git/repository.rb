@@ -22,19 +22,23 @@ class Git::Repository
   end
   
   def objects
-    Git::Collection.new(self, Git::Object)
+    @objects ||= Git::Collection.new(store, Git::Object)
   end
   
   def blobs
-    Git::Collection.new(self, Git::Blob)
+    @blobs ||= Git::Collection.new(store, Git::Blob)
   end
   
   def trees
-    Git::Collection.new(self, Git::Tree)
+    @trees ||= Git::Collection.new(store, Git::Tree)
   end
   
   def commits
-    Git::Collection.new(self, Git::Commit)
+    @commits ||= Git::Collection.new(store, Git::Commit)
+  end
+  
+  def store
+    @store ||= Git::Store.new(git_path)
   end
   
   #
@@ -65,11 +69,11 @@ class Git::Repository
   # containing +path+. Raises a Git::RepositoryNotFound exception if no git
   # directory exists in any of +path+'s parents.
   #
-  def self.find_work_dir(path)
+  def self.find_work_path(path)
     path.absolute.ascend do |p|
       return p if p.join(GIT_DIR).exists?
     end
     
-    raise Git::RepositoryNotFound, "not a git repository"
+    raise Git::RepositoryNotFound, "#{path} is not in a git repository"
   end
 end

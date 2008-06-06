@@ -1,32 +1,24 @@
 class Git::Collection
-  attr_accessor :repo
+  attr_accessor :repository
   attr_accessor :klass
   
   include Enumerable
   
-  def initialize(repo, klass)
-    self.repo  = repo
+  def initialize(store, klass)
+    self.store = store
     self.klass = klass
   end
   
   def [](id)
-    klass[repo, id]
-  end
-  
-  def find(*args)
-    klass.find(repo, *args)
-  end
-  
-  def find_all(*args)
-    klass.find_all(repo, *args)
+    klass.find(store, id)
   end
   
   def each(&block)
-    to_a.each(&block)
+    klass.each(store, &block)
   end
   
-  def to_a
-    klass.find_all(repo)
+  def exists?
+    klass.exists?(store)
   end
   
   def to_s

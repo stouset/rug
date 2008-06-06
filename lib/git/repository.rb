@@ -2,15 +2,6 @@ class Git::Repository
   GIT_DIR = '.git' # the location of the git dir in a repo
   
   #
-  # Returns the repository that owns +dir+. Raises a Git::RepositoryNotFound
-  # exception if the directory isn't owned by a git repository.
-  #
-  def self.new(dir = Dir.pwd)
-    self.work_path = dir
-    self.store     = Git::Store.
-  end
-  
-  #
   # Creates a git repository at +dir+.
   #
   def self.create(dir = Dir.pwd)
@@ -18,9 +9,36 @@ class Git::Repository
   end
   
   #
-  # TODO: actually implement this
+  # Returns the repository that owns +dir+. Raises a Git::RepositoryNotFound
+  # exception if the directory isn't owned by a git repository.
   #
-  def init
+  def initialize(dir = Dir.pwd)
+    self.work_path = dir
+    self.store     = Git::Store.
+  end
+  
+  def [](id)
+    objects.find(id)
+  end
+  
+  def find(id)
+    objects.find(id)
+  end
+  
+  def objects
+    Git::Collection.new(Git::Object)
+  end
+  
+  def blobs
+    Git::Collection.new(Git::Blob)
+  end
+  
+  def trees
+    Git::Collection.new(Git::Tree)
+  end
+  
+  def commits
+    Git::Collection.new(Git::Commit)
   end
   
   #

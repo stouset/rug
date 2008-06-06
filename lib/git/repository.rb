@@ -1,62 +1,61 @@
 class Git::Repository
-  GIT_DIR_NAME    = '.git'    # the location of the git dir in a repo
-  OBJECT_DIR_NAME = 'objects' # the location of the object dir in git
+  GIT_DIR = '.git' # the location of the git dir in a repo
   
   #
-  # Joins all +parts+ to create a path relative to the current working
-  # directory. If no +parts+ are passed, simply returns the path to the
-  # working directory.
+  # Returns the repository that owns +dir+. Raises a Git::RepositoryNotFound
+  # exception if the directory isn't owned by a git repository.
   #
-  def self.work_path(*parts)
-    work_dir.join(*parts)
+  def self.new(dir = Dir.pwd)
+    self.work_path = dir
+    self.store     = Git::Store.
   end
   
   #
-  # Joins all +parts+ to create a path relative to the current git directory.
-  # If no +parts+ are passed, simply returns the path to the git directory.
+  # Creates a git repository at +dir+.
   #
-  def self.git_path(*parts)
-    git_dir.join(*parts)
+  def self.create(dir = Dir.pwd)
+    new(dir).init!
   end
   
   #
-  # Joins all +parts+ to create a path relative to the current object store
-  # directory. If no +parts+ are passed, simply returns the path to the object
-  # store directory.
+  # TODO: actually implement this
   #
-  def self.object_path(*parts)
-    git_dir.join(OBJECT_DIR_NAME, *parts)
+  def init
+  end
+  
+  #
+  # Sets the working dir of the repository.
+  #
+  def work_path=(dir)
+    @work_path = self.class.find_work_path(dir.to_path).absolute
+  end
+  
+  #
+  # Gets the location of the repository's working dir.
+  #
+  def work_path
+    @work_path
+  end
+  
+  #
+  # Gets the location of the repository's git dir.
+  #
+  def git_path
+    work_dir.join(GIT_DIR)
   end
   
   private
   
   #
-  # Returns the full path to the current working directory. Caches the result,
-  # so the working dir will never end up changing on us mid-execution.
+  # Ascends up +path+ finding the top level of the working directory
+  # containing +path+. Raises a Git::RepositoryNotFound exception if no git
+  # directory exists in any of +path+'s parents.
   #
-  def self.work_dir
-    @work_dir ||= self.git_dir.parent
-  end
-  
-  #
-  # Returns the full path to the current git directory. Caches the result, so
-  # the git dir will never end up changing on us mid-execution.
-  #
-  def self.git_dir
-    @git_dir ||= find_git_dir(Dir.pwd)
-  end
-  
-  #
-  # Ascends up +path+ finding the git directory responsible for the location
-  # passed. Raises a Git::RepositoryNotFound exception if no git directory
-  # exists in any of +path+'s parents.
-  #
-  def self.find_git_dir(path)
-    path.to_path.expand_path.ascend do |p|
-      p = p.join(GIT_DIR_NAME)
-      return p if p.exist?
+  def self.find_work_dir(path)
+    path.absolute.ascend do |p|
+      return p if p.join(GIT_DIR).exists?
     end
     
-    raise Git::RepositoryNotFound, path
+    raise Git::RepositoryNotFound, "not a git repository"
   end
 end

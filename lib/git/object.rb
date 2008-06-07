@@ -16,7 +16,7 @@ class Git::Object
   end
   
   def self.find(store, id)
-    type, dump = store.fetch(id)
+    type, dump = store.get(id)
     object     = load(store, type, dump)
     verify_object_type(object)
     object
@@ -26,7 +26,11 @@ class Git::Object
     raise NotImplementedError, "can't iterate over all #{type}s"
   end
   
-  def self.hash(type, dump)
+  def self.canonical(type, dump)
+    CANONICAL_FORMAT % [ type, dump.length, dump ]
+  end
+  
+  def self.id(type, dump)
     Digest::SHA1.hexdigest(canonical(type, dump))
   end
   
@@ -37,25 +41,27 @@ class Git::Object
   def ==(other)
     # due to our use of SHA-1, this _should_ fail in a reasonable and expected
     # manner when the other object isn't a Git object
-    self.hash == other.hash
+    self.id == other.id
   end
   
   alias eql? ==
   
+  def id
+    self.class.id(type, dump)
+  end
+  
+  alias hash id
+  
   def save
-    store.put(hash, type, dump).hash
+    store.put(id, type, dump)
   end
   
   def type
     self.class.type
   end
   
-  def hash
-    self.class.hash(type, dump)
-  end
-  
   def canonical
-    CANONICAL_FORMAT % [ type, dump.length, dump ]
+    self.class.canonical(type, dump)
   end
   
   def load(dump)
@@ -65,6 +71,10 @@ class Git::Object
   
   def dump
     _dump
+  end
+  
+  def inspect
+    "#<#{self.class.name} #{id}>"
   end
   
   def to_tree

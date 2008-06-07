@@ -41,13 +41,6 @@ class Git::Repository
   end
   
   #
-  # Sets the working dir of the repository.
-  #
-  def work_path=(dir)
-    @work_path = self.class.find_work_path(dir.to_path).absolute
-  end
-  
-  #
   # Gets the location of the repository's working dir.
   #
   def work_path
@@ -62,6 +55,16 @@ class Git::Repository
   end
   
   private
+  
+  #
+  # Sets the working dir of the repository. Should not be modified once
+  # written.
+  #--
+  # TODO: raise exception on re-modification
+  #
+  def work_path=(dir)
+    @work_path = self.class.find_work_path(dir.to_path).absolute
+  end
   
   #
   # Ascends up +path+ finding the top level of the working directory

@@ -26,7 +26,7 @@ class Git::Collection
   end
   
   def contains?(id)
-    klass.exists?(store, id)
+    store.contains?(id)
   end
   
   def to_s

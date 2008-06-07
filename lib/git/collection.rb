@@ -13,12 +13,20 @@ class Git::Collection
     klass.find(store, id)
   end
   
+  def create(*args)
+    klass.create(store, *args)
+  end
+  
+  def new(*args)
+    klass.new(store, *args)
+  end
+  
   def each(&block)
     klass.each(store, &block)
   end
   
-  def exists?
-    klass.exists?(store)
+  def contains?(id)
+    klass.exists?(store, id)
   end
   
   def to_s

@@ -1,5 +1,4 @@
 require 'git/proxyable'
-
 require 'digest/sha1'
 
 class Git::Object
@@ -7,32 +6,20 @@ class Git::Object
   
   attr_accessor :store
   
-  def self.klass(type)
-    const_get(type.to_s.capitalize)
-  end
-  
   def self.type
     # TODO: optimize this regexp
     name.downcase.sub!(/^.*::/, '').to_sym
   end
   
-  def self.create(*args)
-    new(*args).save
-  end
-  
-  def self.load(store, type, dump)
-    klass(type).new(store).load(dump)
+  def self.create(store, *args)
+    new(store, *args).save
   end
   
   def self.find(store, id)
-    type, dump = store.read(id)
+    type, dump = store.fetch(id)
     object     = load(store, type, dump)
     verify_object_type(object)
     object
-  end
-  
-  def self.exists?(store, id)
-    store.contains?(id)
   end
   
   def self.each(store)
@@ -56,7 +43,7 @@ class Git::Object
   alias eql? ==
   
   def save
-    store.write(hash, type, dump).hash
+    store.put(hash, type, dump).hash
   end
   
   def type
@@ -86,6 +73,20 @@ class Git::Object
   end
   
   private
+  
+  private_class_method :new
+  
+  def self.inherited(subclass)
+    subclass.public_class_method :new
+  end
+  
+  def self.klass(type)
+    const_get(type.to_s.capitalize)
+  end
+  
+  def self.load(store, type, dump)
+    klass(type).new(store).load(dump)
+  end
   
   #
   # Checks that the object is of the same class this method is being run in.

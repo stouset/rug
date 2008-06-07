@@ -1,5 +1,5 @@
 class Git::Collection
-  attr_accessor :repository
+  attr_accessor :store
   attr_accessor :klass
   
   include Enumerable

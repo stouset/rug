@@ -1,5 +1,6 @@
 class Git::Repository
-  GIT_DIR = '.git' # the location of the git dir in a repo
+  # The location of the git dir in a repo
+  GIT_DIR = '.git'
   
   #
   # Creates a git repository at +dir+.
@@ -51,7 +52,7 @@ class Git::Repository
   # Gets the location of the repository's git dir.
   #
   def git_path
-    work_path.join(GIT_DIR)
+    @git_path ||= work_path.join(GIT_DIR)
   end
   
   private

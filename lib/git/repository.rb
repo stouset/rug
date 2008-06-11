@@ -1,3 +1,10 @@
+#
+# Represents a git repository. When instantiated, looks up the directory
+# hierarchy for a git repository in any parent of the specified path.
+#
+# Gives access to all the commits, trees, blobs, etc. in the repository, plus
+# allows finding objects by id, access to the backend storage, etc.
+#
 class Git::Repository
   # The location of the git dir in a repo
   GIT_DIR = '.git'
@@ -17,6 +24,10 @@ class Git::Repository
     self.work_path = dir
   end
   
+  #
+  # Returns the object identified by id. Raises Git::ObjectNotFound if none
+  # exists.
+  #
   def [](id)
     objects[id]
   end

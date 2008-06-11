@@ -4,34 +4,33 @@ require 'digest/sha1'
 class Git::Object
   CANONICAL_FORMAT = "%s %d\0%s"
   
-  attr_accessor :store
-  
-  def self.type
-    # TODO: optimize this regexp
-    name.downcase.sub!(/^.*::/, '').to_sym
-  end
+  OBJECT_CACHE = Hash.new {|h, k| h[k] = {} }
   
   def self.create(store, *args)
     new(store, *args).save
   end
   
   def self.find(store, id)
-    type, dump = store.get(id)
-    object     = load(store, type, dump)
-    verify_object_type(object)
-    object
+    cache[store][id] ||= begin
+      type, dump = store.get(id)
+      load(store, type, dump)
+    end
+    
+    object = cache[store][id]
+    object.kind_of?(self) ? object : object.send(:"to_#{type}")
   end
   
-  def self.each(store)
-    raise NotImplementedError, "can't iterate over all #{type}s"
+  def self.id(type, dump)
+    Digest::SHA1.hexdigest(canonical(type, dump))
   end
   
   def self.canonical(type, dump)
     CANONICAL_FORMAT % [ type, dump.length, dump ]
   end
   
-  def self.id(type, dump)
-    Digest::SHA1.hexdigest(canonical(type, dump))
+  def self.type
+    # TODO: optimize this regexp
+    name.downcase.sub!(/^.*::/, '').to_sym
   end
   
   def initialize(store)
@@ -41,7 +40,7 @@ class Git::Object
   def ==(other)
     # due to our use of SHA-1, this _should_ fail in a reasonable and expected
     # manner when the other object isn't a Git object
-    self.id == other.id
+    self.hash == other.hash
   end
   
   alias eql? ==
@@ -53,7 +52,7 @@ class Git::Object
   alias hash id
   
   def save
-    store.put(id, type, dump)
+    store.put(self.id, self.type, self.dump)
   end
   
   def type
@@ -77,12 +76,24 @@ class Git::Object
     "#<#{self.class.name} #{id}>"
   end
   
+  def to_blob
+    raise Git::ObjectTypeError,
+      "#{type} can't be represented as a blob"
+  end
+  
   def to_tree
     raise Git::ObjectTypeError,
       "#{type} isn't tree-ish"
   end
   
+  def to_commit
+    raise Git::ObjectTypeError,
+      "#{type} can't be represented as a commit"
+  end
+  
   private
+  
+  attr_accessor :store
   
   private_class_method :new
   
@@ -98,19 +109,8 @@ class Git::Object
     klass(type).new(store).load(dump)
   end
   
-  #
-  # Checks that the object is of the same class this method is being run in.
-  # Raises an exception if this is not the case. This allows us to check that
-  # an object loaded through Git::Object is any kind of Git::Object, but an
-  # object loaded through Git::Object::Blob must be a blob, even though the
-  # method in the subclass is technically capable of loading any type of
-  # object.
-  #
-  def self.verify_object_type(object)
-    unless object.kind_of?(self)
-      raise Git::ObjectTypeError,
-        "expected a #{self.type} but was a #{object.type}"
-    end
+  def self.cache
+    OBJECT_CACHE
   end
 end
 

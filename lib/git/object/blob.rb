@@ -15,8 +15,8 @@ class Git::Object::Blob < Git::Object
   # Creates a new instance of a Blob with optional raw +contents+.
   #
   def initialize(store, contents = nil)
-    super(store)
     self.contents = contents
+    super(store)
   end
   
   #
@@ -25,6 +25,10 @@ class Git::Object::Blob < Git::Object
   #
   def to_s
     contents.to_s
+  end
+  
+  def to_blob
+    self
   end
   
   private

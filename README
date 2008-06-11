@@ -1,0 +1,36 @@
+== Usage
+
+  # Create a new repository
+  repo = Git::Repository.init('path/to/repo')
+  
+  # Load an existing repository in the pwd
+  repo = Git::Repository.new
+  
+  # Fetch an object from the repo
+  repo['master']  # => #<Git::Object::Commit>
+  repo['a4bce95'] # => #<Git::Object::Blob>
+  
+  # Auto-convert an object to a tree
+  repo.trees['master'] # => #<Git::Object::Tree>
+  
+  # Create a new commit, does not update HEAD
+  tree   = repo.trees.new('lib', 'bin')
+  parent = repo.head
+  commit = repo.commit.create "Test",
+    :tree    => tree, 
+    :parent  => parent
+  
+  # Shorthand for the above
+  commit = repo.commits.create "Test", :tree => ['lib', 'bin']
+  
+  # Alter the index, then commit from there
+  repo.stage('lib/foo.rb')
+  repo.stage(Git::File.new('lib/bar.rb', 'Contents of bar.rb'))
+  repo.commit('Commit from index')
+  
+  # The same thing, but manually
+  repo.index.add('lib/foo.rb')
+  repo.index.add('lib/bar.rb', 'Contents of bar.rb')
+  commit = repo.commits.create 'Commit from index',
+    :tree => repo.index.tree
+  repo.heads[repo.branch] = commit

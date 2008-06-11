@@ -2,8 +2,6 @@ class Git::Collection
   attr_accessor :store
   attr_accessor :klass
   
-  include Enumerable
-  
   def initialize(store, klass)
     self.store = store
     self.klass = klass
@@ -21,15 +19,11 @@ class Git::Collection
     klass.new(store, *args)
   end
   
-  def each(&block)
-    klass.each(store, &block)
-  end
-  
   def contains?(id)
     store.contains?(id)
   end
   
-  def to_s
-    to_a.to_s
-  end
+  alias contain?  contains?
+  alias include?  contains?
+  alias includes? contains?
 end

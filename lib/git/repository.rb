@@ -37,15 +37,15 @@ class Git::Repository
   end
   
   def blobs
-    @blobs ||= Git::Collection.new(store, Git::Blob)
+    @blobs ||= Git::Collection.new(store, Git::Object::Blob)
   end
   
   def trees
-    @trees ||= Git::Collection.new(store, Git::Tree)
+    @trees ||= Git::Collection.new(store, Git::Object::Tree)
   end
   
   def commits
-    @commits ||= Git::Collection.new(store, Git::Commit)
+    @commits ||= Git::Collection.new(store, Git::Object::Commit)
   end
   
   def store

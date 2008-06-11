@@ -77,25 +77,16 @@ class Git::Store::LooseObject
   end
   
   def put(id, type, dump)
-    unless contains?(id)
-      # TODO: decide whether or not I should perform validations like this at
-      # save-time, or only read-time; they may be slow.
-      verify_type(id, type)
-      verify_id(id, type, dump)
-      
-      contents = OUTPUT_FORMAT % [ type, length, dump ]
-      
-      write(id, contents)
-    end
+    # TODO: decide whether or not I should perform validations like this at
+    # save-time, or only read-time; they may be slow.
+    verify_type(id, type)
+    verify_id(id, type, dump)
+    
+    contents = OUTPUT_FORMAT % [ type, length, dump ]
+    
+    write(id, contents)
     
     id
-  end
-  
-  def delete(id)
-    path_to(id).unlink
-    id
-  rescue Errno::ENOENT
-    nil
   end
   
   private

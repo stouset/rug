@@ -1,32 +1,65 @@
+#
+# Proxies object storage to specific object backends, like the loose object
+# store and pack files. Allows storing and retrieving objects while
+# abstracting the real location and storage type of the objects themselves.
+#
+# Any type of store must implement the following interface:
+#
+# [<tt>Klass#initialize(git_path)</tt>]
+#   Must set up the storage engine to read objects from the repository at
+#   +git_path+.
+#
+# [<tt>Klass#contains?(id)</tt>]
+#   Must return whether or not the object is currently contained in the
+#   storage engine.
+#
+# [<tt>Klass#get(id)</tt>]
+#   Must return an array of <tt>[type, dump]</tt> for the object if it exists.
+#   If not, must return nil.
+#
+# [<tt>Klass#put(id, type, dump)</tt>]
+#   Must store the object's +type+ and +dump+ in a way that can be later
+#   retrieved by the +id+. Must return the id of the stored object.
+#
 class Git::Store
-  attr_reader :writer
-  attr_reader :readers
-  
+  #
+  # Opens an existing store for the git repository at +git_path+.
+  #
   def initialize(git_path)
-    self.writer   = Git::Store::LooseObject.new(git_path)
-    self.readers  = [ self.writer ]
+    loose_object = Git::Store::LooseObject.new(git_path)
+    
+    self.readers    = [ loose_object ]
+    self.writer     = loose_object
+  end
+  
+  #
+  # Returns whether or not the object identified by +id+ exists in any
+  # permanent storage engine.
+  #
+  def contains?(id)
+    readers.detect {|store| store.contains?(id) } != nil
   end
   
   def get(id)
-    # TODO: avoid looking first, just try them all
-    readers.detect {|store| store.contains?(id) }.get(id)
-  rescue NoMethodError => e
-    raise e
-    raise Git::ObjectNotFound, "not a valid object id '#{id}'"
+    store = readers.detect {|store| store.contains?(id) }
+    
+    case store.nil?
+      when false then store.get(id)
+      else raise Git::ObjectNotFound, "couldn't find #{id}"
+    end
   end
   
   def put(id, type, dump)
-    writer.put(id, type, dump)
-  end
-  
-  def contains?(id)
-    not readers.detect {|store| store.contains?(id) }.nil?
+    writer.put(id, type, dump) unless contains?(id)
   end
     
   private
   
-  attr_writer :writer
-  attr_writer :readers
+  # an array of permanent storage engines
+  attr_accessor :readers
+  
+  # the storage engine to permanently write objects to
+  attr_accessor :writer
 end
 
 require 'git/store/loose_object'

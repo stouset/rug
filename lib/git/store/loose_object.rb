@@ -89,6 +89,10 @@ class Git::Store::LooseObject
     id
   end
   
+  def disambiguate(id)
+    path_to(id).glob(['*', '**/*']).map! {|path| id_of(path) }
+  end
+  
   private
   
   #
@@ -113,6 +117,10 @@ class Git::Store::LooseObject
   
   def path_to(id)
     path.join id.dup.insert(SUBDIR_LENGTH, File::SEPARATOR)
+  end
+  
+  def id_of(path)
+    path.to_a[-2..-1].join
   end
   
   #

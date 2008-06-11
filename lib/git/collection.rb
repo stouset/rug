@@ -8,7 +8,7 @@ class Git::Collection
   end
   
   def [](id)
-    klass.find(store, id)
+    klass.find(store, store.disambiguate(id))
   end
   
   def create(*args)
@@ -20,7 +20,7 @@ class Git::Collection
   end
   
   def contains?(id)
-    store.contains?(id)
+    store.contains?(store.disambiguate(id))
   end
   
   alias contain?  contains?

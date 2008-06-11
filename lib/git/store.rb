@@ -21,6 +21,8 @@
 #   Must store the object's +type+ and +dump+ in a way that can be later
 #   retrieved by the +id+. Must return the id of the stored object.
 #
+# [<tt>Klass#disambiguate(id)</tt>]
+#
 class Git::Store
   #
   # Opens an existing store for the git repository at +git_path+.
@@ -51,6 +53,16 @@ class Git::Store
   
   def put(id, type, dump)
     writer.put(id, type, dump) unless contains?(id)
+  end
+  
+  def disambiguate(id)
+    ids = readers.map {|store| store.disambiguate(id) }.flatten.uniq
+    
+    case ids.length <=> 1
+      when  0 then ids.first
+      when -1 then raise Git::ObjectNotFound, "couldn't find #{id}"
+      when  1 then raise Git::ObjectNotFound, "couldn't disambiguate #{id}"
+    end
   end
     
   private

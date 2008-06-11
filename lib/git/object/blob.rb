@@ -9,7 +9,7 @@
 # duplicated within a repository.
 #
 class Git::Object::Blob < Git::Object
-  attr_accessor :contents
+  attr_reader :contents
   
   #
   # Creates a new instance of a Blob with optional raw +contents+.

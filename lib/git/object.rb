@@ -2,6 +2,8 @@ require 'git/proxyable'
 require 'digest/sha1'
 
 class Git::Object
+  include Proxyable
+  
   CANONICAL_FORMAT = "%s %d\0%s"
   
   OBJECT_CACHE = Hash.new {|h, k| h[k] = {} }
@@ -64,7 +66,7 @@ class Git::Object
   end
   
   def load(dump)
-    _load(dump)
+    proxy!(dump) { _load(dump) }
     self
   end
   
